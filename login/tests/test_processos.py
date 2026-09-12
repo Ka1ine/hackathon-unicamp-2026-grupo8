@@ -17,7 +17,7 @@ class ProcessosFlowTest(unittest.TestCase):
         app.button[0].click().run()
         self.assertFalse(app.exception)
         self.assertEqual(app.title[0].value, "Processos")
-        cards = lambda: [row for m in app.markdown if 'class="lista"' in m.value for row in m.value.split('<div class="linha">')[1:]]
+        cards = lambda: [m.value for m in app.markdown if 'class="linha process-card-row"' in m.value]
         self.assertEqual(len(cards()), 2)
         app.text_input(key="busca_processos").set_value("jose").run()
         self.assertEqual(len(cards()), 1)

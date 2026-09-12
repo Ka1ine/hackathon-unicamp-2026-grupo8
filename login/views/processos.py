@@ -135,6 +135,40 @@ def render_processos():
             border-radius: 12px;
         }
 
+        .process-card-row {
+            transition: border-color .16s ease, background .16s ease, transform .16s ease;
+        }
+
+        div[class*="st-key-process_card_"] {
+            position: relative;
+        }
+
+        div[class*="st-key-process_card_"] [data-testid="stButton"] {
+            position: absolute;
+            inset: 0 0 8px;
+            z-index: 3;
+        }
+
+        div[class*="st-key-process_card_"] [data-testid="stButton"] button {
+            width: 100%;
+            height: 100%;
+            min-height: 78px;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        div[class*="st-key-process_card_"]:has(button:hover) .process-card-row,
+        div[class*="st-key-process_card_"]:has(button:focus-visible) .process-card-row {
+            background: #303540;
+            border-color: #ffb13370;
+            transform: translateY(-1px);
+        }
+
+        div[class*="st-key-process_card_"]:has(button:focus-visible) .process-card-row {
+            outline: 2px solid #ffb133;
+            outline-offset: 3px;
+        }
+
         .cabecalho {
             background: transparent;
             border: none;
@@ -302,51 +336,36 @@ def render_processos():
         "Baixo": "baixo",
     }
 
-    linhas = []
-
-    for processo in filtrados:
-        classe = classes_risco.get(processo["risco"], "pendente")
-
-        linhas.append(
-            f"""
-            <div class="linha">
-                <div>
-                    <div class="processo-id">
-                        {escape(processo["id"])}
-                    </div>
-                    <div class="processo-nome">
-                        {escape(processo["nome"])}
-                    </div>
-                </div>
-
-                <div class="valor">
-                    {formatar_moeda(processo["valor"])}
-                </div>
-
-                <div>
-                    <span class="risco {classe}">
-                        {escape(processo["risco"])}
-                    </span>
-                </div>
-
-                <div class="recomendacao">
-                    {escape(processo["recomendacao"])}
-                </div>
-            </div>
-            """
-        )
-
     st.markdown(
-        '<div class="lista">'
-        '<div class="linha cabecalho">'
-        "<div>Processo / Nome</div>"
-        "<div>Valor</div>"
-        "<div>Risco</div>"
-        "<div>Recomendação</div>"
-        "</div>"
-        # Markdown interpreta linhas em branco seguidas de indentação como código.
-        # Compactar o HTML mantém toda a lista em um único bloco HTML.
-        + "".join(parte.strip() for linha in linhas for parte in linha.splitlines())
-        + "</div>",
+        '<div class="lista"><div class="linha cabecalho">'
+        '<div>Processo / Nome</div><div>Valor</div><div>Risco</div>'
+        '<div>Recomendação</div></div></div>',
         unsafe_allow_html=True,
     )
+
+    for indice, processo in enumerate(filtrados):
+        classe = classes_risco.get(processo["risco"], "pendente")
+        cartao = f"""
+        <div class="lista"><div class="linha process-card-row">
+            <div>
+                <div class="processo-id">{escape(processo["id"])}</div>
+                <div class="processo-nome">{escape(processo["nome"])}</div>
+            </div>
+            <div class="valor">{formatar_moeda(processo["valor"])}</div>
+            <div><span class="risco {classe}">{escape(processo["risco"])}</span></div>
+            <div class="recomendacao">{escape(processo["recomendacao"])}</div>
+        </div></div>
+        """
+        with st.container(key=f"process_card_{indice}"):
+            st.markdown(
+                "".join(parte.strip() for parte in cartao.splitlines()),
+                unsafe_allow_html=True,
+            )
+            if st.button(
+                f"Abrir detalhes do processo {processo['id']} de {processo['nome']}",
+                key=f"open_process_{indice}",
+                use_container_width=True,
+            ):
+                from views.detalhes import render_detalhes
+                st.session_state.processo_detalhe_id = processo["id"]
+                st.switch_page(st.Page(render_detalhes, url_path="processo"))
