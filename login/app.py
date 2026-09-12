@@ -2,7 +2,17 @@
 
 import streamlit as st
 
-st.set_page_config(page_title="Entrar | Enter", page_icon="🟨", layout="centered")
+from views.processos import render_processos
+
+authenticated = st.session_state.get("authenticated", False)
+st.set_page_config(page_title="Processos | Enter" if authenticated else "Entrar | Enter",
+                   page_icon="🟨", layout="wide" if authenticated else "centered",
+                   initial_sidebar_state="expanded")
+
+if authenticated:
+    page = st.navigation([st.Page(render_processos, title="Processos", icon=":material/folder_open:", default=True)], position="hidden")
+    page.run()
+    st.stop()
 
 # Dados fictícios: substitua esta validação por autenticação real ao integrar.
 MOCK_USER = {"email": "demo@enter.com", "password": "123456", "name": "Yasmin"}
@@ -65,17 +75,6 @@ header[data-testid="stHeader"] { background: transparent; }
 """, unsafe_allow_html=True)
 
 st.markdown('<div class="brand" aria-label="Enter">ENTER<span class="brand-mark" aria-hidden="true"></span></div>', unsafe_allow_html=True)
-
-if st.session_state.get("authenticated", False):
-    st.title(f"Olá, {MOCK_USER['name']}!")
-    st.success("Você entrou na conta de demonstração.")
-    st.caption("Ambiente demonstrativo • Dados fictícios")
-    st.write("Aqui você pode conectar a página principal do projeto.")
-    st.json({"nome": MOCK_USER["name"], "email": MOCK_USER["email"], "organização": "Banco Unicamp", "perfil": "Analista jurídico"}, expanded=False)
-    if st.button("Sair", use_container_width=True):
-        st.session_state.clear()
-        st.rerun()
-    st.stop()
 
 st.markdown('''<div class="intro"><h1>Entrar</h1>
 <p>Insira seu email abaixo para entrar na sua conta</p></div>''', unsafe_allow_html=True)
