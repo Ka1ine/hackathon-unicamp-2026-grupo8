@@ -1,38 +1,35 @@
 # Setup e Execução
 
-> Preencha este arquivo com as instruções específicas da sua solução.
-
 ---
 
 ## Pré-requisitos
 
-Liste aqui as dependências necessárias para rodar a solução:
+As dependências necessárias para rodar a solução:
 
-- [ ] ...
-- [ ] ...
-
-## Variáveis de Ambiente
-
-Crie um arquivo `.env` na raiz do projeto com as variáveis necessárias:
-
-```env
-# Exemplo — adapte conforme sua solução
-OPENAI_API_KEY=sua_chave_aqui
-```
-
-> **Nunca commite o arquivo `.env` com credenciais reais.**  
-> Um arquivo `.env.example` com as variáveis (sem valores) já está incluído neste repo.
+- **Python 3.12+**
+- Arquivo `.env` na raiz com `OPENAI_API_KEY=sk-...`
 
 ## Instalação
 
 ```bash
-# Descreva aqui os passos de instalação
+git clone https://github.com/Ka1ine/hackathon-unicamp-2026-grupo8.git
+cd hackathon-unicamp-2026-grupo8
+
+# Ambiente Virtual
+python -m venv venv
+
+                                # Ativação ambiente virtual
+source venv/bin/activate        #   Linux/macOS
+
+venv\Scripts\activate           #   Windows
+
+pip install -r requirements.txt # Instalação dependencies
 ```
 
 ## Execução
 
 ```bash
-# Descreva aqui como rodar a solução
+uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
 ## Dados
