@@ -21,14 +21,19 @@ subsidio_service = SubsidioService()
 @router.get("/process/{process_id}", response_model=CaseProgressionResponse)
 def get_case_progression(
     process_id: str,
-    force_refresh: bool = Query(False, description="Set to true to force a new web scrape")
+    force_refresh: bool = Query(False, description="Set to true to force a new extraction"),
+    parse_local_autos: bool = Query(True, description="Set to true to read 'Autos do Processo' PDFs in the local folder")
 ):
+    """
+    Fetches the timeline progression of a specific case.
+    Uses local cache unless force_refresh is requested.
+    """
     try:
-        # Use explicit kwargs and assign a default local file path
         return service.get_or_update_case(
             process_id=process_id, 
             url="data/sample_case.html", 
-            force_refresh=force_refresh
+            force_refresh=force_refresh,
+            parse_local_autos=parse_local_autos
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro no monitoramento: {str(e)}")
