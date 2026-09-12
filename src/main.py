@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
 from src.api.routes import router as monitoring_router
 
 app = FastAPI(title="Enter AI Legal Engine - Case Progression API")
@@ -14,6 +15,10 @@ app.add_middleware(
 )
 
 app.include_router(monitoring_router)
+
+@app.get("/", include_in_schema=False)
+def root():
+    return RedirectResponse(url="/docs")
 
 if __name__ == "__main__":
     import uvicorn
