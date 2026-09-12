@@ -31,6 +31,7 @@ class TimelineEvent(BaseModel):
     stage: LegalStage = Field(..., description="Fase processual identificada.")
     summary: str = Field(..., description="Resumo em 1-2 frases.")
     title: str = Field(..., description="Título resumido da movimentação.")
+    source: Optional[str] = Field(None, description="Origem da informação: 'files' ou 'web'.")
 
 class CaseProgressionResponse(BaseModel):
     """Consolidated response containing the case progression and timeline."""

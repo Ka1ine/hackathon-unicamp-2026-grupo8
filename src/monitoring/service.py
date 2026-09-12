@@ -2,9 +2,9 @@ import json
 from pathlib import Path
 
 from src.monitoring.extractor import CaseProgressionExtractor
-from src.monitoring.schemas import CaseProgressionResponse
+from src.monitoring.schemas import CaseProgressionResponse, TimelineEvent
 from src.monitoring.scraper import PublicCaseScraper
-from src.utils.pdf_utils import extract_text_from_file  # <-- Added import
+from src.utils.pdf_utils import extract_text_from_file
 
 
 class MonitoringService:
@@ -15,7 +15,14 @@ class MonitoringService:
         self.extractor = CaseProgressionExtractor()
         self.scraper = PublicCaseScraper()
 
-    def get_or_update_case(self, process_id: str, url: str, force_refresh: bool = False, parse_local_autos: bool = True) -> CaseProgressionResponse:
+    def get_or_update_case(
+        self, 
+        process_id: str, 
+        url: str = None, 
+        force_refresh: bool = False, 
+        parse_local_autos: bool = True,
+        demo: bool = True
+    ) -> CaseProgressionResponse:
         process_dir = self.base_data_dir / process_id
         process_dir.mkdir(exist_ok=True, parents=True) 
         
@@ -29,30 +36,58 @@ class MonitoringService:
         if existing_data and not force_refresh:
             return existing_data
 
-        # Initialize an empty string to accumulate all gathered text
-        raw_combined_text = ""
+        all_new_events = []
+        latest_stage = None
+        latest_action = None
+        latest_risk = "Médio"
 
-        # 1. Optionally scrape web/external data
+        # 1. Process Web / Fallback Data (Tagged as "web")
+        web_text = ""
         if url:
-            print(f"[DEBUG] Attempting to scrape new data for {process_id} from {url}...")
+            print(f"[DEBUG] Attempting live web scrape for {process_id} from {url}...")
             web_text = self.scraper.scrape_jusbrasil_or_public(url)
-            if web_text:
-                raw_combined_text += web_text + "\n"
 
-        # 2. NEW LOGIC: Scan local process folder for the case progression PDF
+        if not web_text and demo:
+            fallback_path = "data/sample_case.html"
+            print(f"[DEBUG] Live web scraping unavailable. Demo mode active: falling back to {fallback_path}")
+            web_text = self.scraper.scrape_jusbrasil_or_public(fallback_path)
+
+        if web_text:
+            print("[DEBUG] Extracting progression from web/fallback text...")
+            web_response = self.extractor.extract_progression(process_id, web_text)
+            if web_response and web_response.timeline:
+                for ev in web_response.timeline:
+                    ev.source = "web"  # Tag source as web
+                    all_new_events.append(ev)
+                latest_stage = web_response.current_stage
+                latest_action = web_response.next_recommended_action
+                latest_risk = web_response.risk_level
+
+        # 2. Process Local File Autos Data (Tagged as "file")
         if parse_local_autos:
             print(f"[DEBUG] Searching for local 'Autos' files in {process_dir}...")
+            local_text = ""
             for target_file in process_dir.glob("*.pdf"):
-                # Case-insensitive check to identify the core process document
                 if "autos" in target_file.name.lower() or "processo" in target_file.name.lower():
-                    print(f"[DEBUG] Extracting timeline from local file: {target_file.name}")
+                    print(f"[DEBUG] Extracting text from local file: {target_file.name}")
                     extracted_pdf_text = extract_text_from_file(target_file)
                     if extracted_pdf_text:
-                        raw_combined_text += extracted_pdf_text + "\n"
+                        local_text += extracted_pdf_text + "\n"
+            
+            if local_text.strip():
+                print("[DEBUG] Extracting progression from local files...")
+                file_response = self.extractor.extract_progression(process_id, local_text)
+                if file_response and file_response.timeline:
+                    for ev in file_response.timeline:
+                        ev.source = "file"  # Tag source as file
+                        all_new_events.append(ev)
+                    if not latest_stage:
+                        latest_stage = file_response.current_stage
+                        latest_action = file_response.next_recommended_action
+                        latest_risk = file_response.risk_level
 
-        # SKIP LOGIC: If no text was found anywhere, return existing data or empty schema
-        if not raw_combined_text.strip():
-            print("[WARN] No data found in URL or local files. Skipping extraction.")
+        if not all_new_events:
+            print("[WARN] No data found in URL, fallback, or local files.")
             if existing_data:
                 return existing_data
             
@@ -63,16 +98,21 @@ class MonitoringService:
                 timeline=[]
             )
 
-        # Extract structured progression using OpenAI with the combined text
-        new_data = self.extractor.extract_progression(process_id, raw_combined_text)
+        new_data = CaseProgressionResponse(
+            current_stage=latest_stage or "Outros",
+            next_recommended_action=latest_action or "Aguardar (Nenhuma ação imediata)",
+            process_id=process_id,
+            risk_level=latest_risk,
+            timeline=all_new_events
+        )
 
-        # Merge logic: Append only new events
+        # Merge logic with existing cache
         if existing_data:
             added_count = 0
-            existing_events = {(ev.date, ev.title) for ev in existing_data.timeline}
+            existing_events = {(ev.date, ev.title, ev.source) for ev in existing_data.timeline}
             
             for new_event in new_data.timeline:
-                if (new_event.date, new_event.title) not in existing_events:
+                if (new_event.date, new_event.title, new_event.source) not in existing_events:
                     existing_data.timeline.append(new_event)
                     added_count += 1
             
@@ -86,7 +126,7 @@ class MonitoringService:
         else:
             final_data = new_data
 
-        # Save to JSON
+        # Save to JSON in the process folder
         with open(json_file_path, "w", encoding="utf-8") as file_handler:
             file_handler.write(final_data.model_dump_json(indent=4))
 
