@@ -1,30 +1,36 @@
 import json
 from pathlib import Path
-from src.monitoring.schemas import CaseProgressionResponse
+
 from src.monitoring.extractor import CaseProgressionExtractor
+from src.monitoring.schemas import CaseProgressionResponse
 from src.monitoring.scraper import PublicCaseScraper
 
+
 class MonitoringService:
+    """Handles the retrieval, updating, and caching of case progression data."""
+
     def __init__(self, cache_dir: Path = Path("data/monitoramento_cache")):
+        """Initializes the service with caching directory and processing dependencies."""
         self.cache_dir = cache_dir
-        self.cache_dir.mkdir(parents=True, exist_ok=True) 
+        self.cache_dir.mkdir(exist_ok=True, parents=True)
         self.extractor = CaseProgressionExtractor()
         self.scraper = PublicCaseScraper()
 
     def get_or_update_case(self, process_id: str, url: str, force_refresh: bool = False) -> CaseProgressionResponse:
-        json_file_path = self.cache_dir / f"{process_id}.json"
+        """Fetches new case data, merges it with existing records, and caches the result."""
         existing_data = None
+        json_file_path = self.cache_dir / f"{process_id}.json"
 
-        # 1. Load existing data if available
+        # Load existing data if available
         if json_file_path.exists():
-            with open(json_file_path, "r", encoding="utf-8") as f:
-                existing_data = CaseProgressionResponse(**json.load(f))
+            with open(json_file_path, "r", encoding="utf-8") as file_handler:
+                existing_data = CaseProgressionResponse(**json.load(file_handler))
 
-        # 2. Return cached data instantly if we aren't forcing a refresh
+        # Return cached data instantly if we aren't forcing a refresh
         if existing_data and not force_refresh:
             return existing_data
 
-        # 3. Scrape the latest online data
+        # Scrape the latest online data
         print(f"[DEBUG] Scraping new data for {process_id}...")
         raw_scraped_text = self.scraper.scrape_jusbrasil_or_public(url)
         
@@ -32,15 +38,14 @@ class MonitoringService:
             print("[WARN] Scraper returned empty text. Returning existing data if available.")
             return existing_data if existing_data else None
 
-        # 4. Extract structured progression using OpenAI
+        # Extract structured progression using OpenAI
         new_data = self.extractor.extract_progression(process_id, raw_scraped_text)
 
-        # 5. Merge logic: Append only new events
+        # Merge logic: Append only new events
         if existing_data:
-            # Create a set of existing (date, title) to quickly check for duplicates
+            added_count = 0
             existing_events = {(ev.date, ev.title) for ev in existing_data.timeline}
             
-            added_count = 0
             for new_event in new_data.timeline:
                 if (new_event.date, new_event.title) not in existing_events:
                     existing_data.timeline.append(new_event)
@@ -50,15 +55,15 @@ class MonitoringService:
             
             # Update root metadata with the most recent LLM analysis
             existing_data.current_stage = new_data.current_stage
-            existing_data.risk_level = new_data.risk_level
             existing_data.next_recommended_action = new_data.next_recommended_action
+            existing_data.risk_level = new_data.risk_level
             
             final_data = existing_data
         else:
             final_data = new_data
 
-        # 6. Save the fully merged timeline back to JSON
-        with open(json_file_path, "w", encoding="utf-8") as f:
-            f.write(final_data.model_dump_json(indent=4))
+        # Save the fully merged timeline back to JSON
+        with open(json_file_path, "w", encoding="utf-8") as file_handler:
+            file_handler.write(final_data.model_dump_json(indent=4))
 
         return final_data
