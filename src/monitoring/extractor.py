@@ -11,19 +11,23 @@ class CaseProgressionExtractor:
 
     def extract_progression(self, process_id: str, case_text: str) -> CaseProgressionResponse:
         system_prompt = (
-            "Você é um assistente jurídico especializado em análise processual civil brasileira. "
-            "Examine o texto fornecido dos autos do processo e extraia a cronologia das fases, "
-            "identifique a fase atual, riscos e recomendações de ações necessárias."
+            "Você é um assistente jurídico especializado em análise de movimentações processuais brasileiras. "
+            "Seu objetivo primário é mapear a linha do tempo do processo e identificar rigorosamente prazos (deadlines) "
+            "e ações requeridas (action_required) pelo advogado.\n\n"
+            "Regras de Extração:\n"
+            "1. Para cada movimentação, avalie se há um prazo explícito (ex: 'prazo de 15 dias'). Se houver, deduza a data limite aproximada.\n"
+            "2. Enquadre a ação necessária estritamente em uma das opções fornecidas. Se for apenas um despacho de mero expediente, classifique como 'Aguardar (Nenhuma ação imediata)'.\n"
+            "3. O campo 'next_recommended_action' da resposta raiz deve refletir a ação urgente mais recente.\n"
         )
 
         response = self.client.beta.chat.completions.parse(
             model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": system_prompt},
-                {"role": "user", "content": f"ID do Processo: {process_id}\n\nConteúdo dos Autos:\n{case_text}"}
+                {"role": "user", "content": f"ID: {process_id}\n\nMovimentações Extraídas:\n{case_text}"}
             ],
             response_format=CaseProgressionResponse,
-            temperature=0.1
+            temperature=0.0 # Temperatura 0 para evitar alucinações em datas e prazos
         )
 
         return response.choices[0].message.parsed

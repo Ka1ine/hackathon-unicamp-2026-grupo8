@@ -5,6 +5,8 @@
 
 # Dados sensíveis — não versionar
 data/*.csv
+data/monitoramento_cache/
+data/sample_case.html
 data/monitoring/
 data/subsidios/
 data/processos_exemplo/
