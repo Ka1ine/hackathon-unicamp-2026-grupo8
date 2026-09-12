@@ -66,8 +66,8 @@ def main():
 
     cols_display = [
         "Número do processo", "UF", "Sub-assunto", "Valor da causa",
-        "qtd_subsidios", "probabilidade_derrota", "decisao_sugerida",
-        "valor_proposta_inicial", "valor_teto_acordo"
+        "qtd_subsidios", "custo_operacional_estimado", "risco", "decisao_sugerida",
+        "valor_sugerido_proposta_inicial", "valor_teto_acordo"
     ]
 
     print("\n" + "=" * 80)
