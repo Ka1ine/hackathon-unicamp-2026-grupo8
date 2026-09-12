@@ -23,9 +23,7 @@ st.markdown("""
 :root { color-scheme: dark; }
 .stApp { background: #22252d; color: #f5f5f7; }
 header[data-testid="stHeader"] { background: transparent; }
-[data-testid="stToolbar"] { display: none; }
-[data-testid="stAppDeployButton"], [data-testid="stMainMenu"],
-[data-testid="stSidebar"], [data-testid="stSidebarCollapsedControl"] { display: none !important; }
+[data-testid="stAppDeployButton"], [data-testid="stMainMenu"] { display: none !important; }
 .stMainBlockContainer {
     max-width: 480px; padding: max(36px, calc((100svh - 730px) / 2)) 24px 40px;
 }

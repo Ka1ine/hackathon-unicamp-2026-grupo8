@@ -37,7 +37,6 @@ def render_processos():
             background: transparent;
         }
 
-        [data-testid="stToolbar"],
         [data-testid="stAppDeployButton"],
         [data-testid="stMainMenu"] {
             display: none !important;
