@@ -7,7 +7,11 @@ load_dotenv()
 
 class CaseProgressionExtractor:
     def __init__(self, api_key: str = None):
-        self.client = OpenAI(api_key=api_key or os.getenv("OPENAI_API_KEY"))
+        self.client = OpenAI(
+            api_key=api_key or os.getenv("OPENAI_API_KEY"),
+            timeout=20.0,
+            max_retries=2
+        )
 
     def extract_progression(self, process_id: str, case_text: str) -> CaseProgressionResponse:
         system_prompt = (
@@ -31,3 +35,12 @@ class CaseProgressionExtractor:
         )
 
         return response.choices[0].message.parsed
+
+class SubsidioExtractor:
+    def __init__(self, api_key: str = None):
+        # Enforce maximum timeout of 20 seconds per request
+        self.client = OpenAI(
+            api_key=api_key or os.getenv("OPENAI_API_KEY"),
+            timeout=20.0,
+            max_retries=2
+        )
