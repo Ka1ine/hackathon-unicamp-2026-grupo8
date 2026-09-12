@@ -7,7 +7,8 @@ from pypdf import PdfReader
 import streamlit as st
 
 RAIZ = Path(__file__).resolve().parents[2]
-PASTAS = ("Dados_processo1", "Dados_processo_2")
+PASTA_DADOS = RAIZ / "data"
+PASTAS = ("dados_processo1", "dados_processo2")
 
 
 def extrair_processo(caminho):
@@ -39,8 +40,9 @@ def _ler_pdf(caminho, versao):
 
 def carregar_processos(raiz=RAIZ):
     processos, erros = [], []
+    pasta_dados = Path(raiz) / "data"
     for pasta in PASTAS:
-        diretorio = Path(raiz) / pasta
+        diretorio = pasta_dados / pasta
         arquivos = sorted(diretorio.glob("01_Autos_Processo_*.pdf"))
         if len(arquivos) != 1:
             erros.append(f"{pasta}: esperado um PDF de autos; encontrados {len(arquivos)}.")

@@ -21,7 +21,7 @@ Conta fictícia: **demo@enter.com** / **123456**.
 - O formulário valida os campos e a conta fictícia.
 - Ao entrar, a tela Processos abre automaticamente, com menu lateral recolhível e perfil fictício.
 - Busca por nome (ignorando acentos) ou número, com ou sem pontuação, e filtros combinados de risco e recomendação.
-- Os dois processos são lidos diretamente dos PDFs de autos nas pastas `Dados_processo1` e `Dados_processo_2`, usando `pypdf`. Número, nome e valor da causa são extraídos do texto, sem cadastro fixo. A planilha não é utilizada.
+- Os dois processos são lidos diretamente dos PDFs de autos nas pastas `data/dados_processo1` e `data/dados_processo2`, usando `pypdf`. Número, nome e valor da causa são extraídos do texto, sem cadastro fixo. A planilha não é utilizada.
 - Alterações nos PDFs invalidam o cache na próxima interação/reexecução da tela. Arquivos ausentes, ilegíveis ou sem os campos esperados geram aviso; dados não são inventados. PDFs digitalizados sem texto precisam de OCR.
 - Risco e recomendação ficam como “A avaliar” até integrar o motor de análise; não são classificações calculadas.
 - Recuperação de senha e acesso corporativo mostram avisos de demonstração.

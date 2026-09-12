@@ -37,6 +37,12 @@ def render_processos():
             background: transparent;
         }
 
+        [data-testid="stToolbar"],
+        [data-testid="stAppDeployButton"],
+        [data-testid="stMainMenu"] {
+            display: none !important;
+        }
+
         .stMainBlockContainer {
             max-width: 1250px;
             padding-top: 48px;
@@ -119,7 +125,7 @@ def render_processos():
 
         .linha {
             display: grid;
-            grid-template-columns: minmax(285px, 2fr) 1fr 0.8fr 1.4fr;
+            grid-template-columns: minmax(390px, 2.8fr) 1fr 0.8fr 1.3fr;
             align-items: center;
             gap: 20px;
             min-width: 720px;
@@ -286,7 +292,6 @@ def render_processos():
 
     st.write("")
     st.subheader(f"Processos ({len(filtrados)})")
-    st.caption("Dados extraídos dos PDFs • Risco e recomendação aguardam avaliação.")
 
     if not filtrados:
         st.info("Nenhum processo encontrado. Tente outra busca ou filtro.")

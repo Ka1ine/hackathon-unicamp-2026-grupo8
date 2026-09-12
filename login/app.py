@@ -7,7 +7,8 @@ from views.processos import render_processos
 authenticated = st.session_state.get("authenticated", False)
 st.set_page_config(page_title="Processos | Enter" if authenticated else "Entrar | Enter",
                    page_icon="🟨", layout="wide" if authenticated else "centered",
-                   initial_sidebar_state="expanded")
+                   initial_sidebar_state="expanded" if authenticated else "collapsed",
+                   menu_items={})
 
 if authenticated:
     page = st.navigation([st.Page(render_processos, title="Processos", icon=":material/folder_open:", default=True)], position="hidden")
@@ -23,6 +24,8 @@ st.markdown("""
 .stApp { background: #22252d; color: #f5f5f7; }
 header[data-testid="stHeader"] { background: transparent; }
 [data-testid="stToolbar"] { display: none; }
+[data-testid="stAppDeployButton"], [data-testid="stMainMenu"],
+[data-testid="stSidebar"], [data-testid="stSidebarCollapsedControl"] { display: none !important; }
 .stMainBlockContainer {
     max-width: 480px; padding: max(36px, calc((100svh - 730px) / 2)) 24px 40px;
 }
