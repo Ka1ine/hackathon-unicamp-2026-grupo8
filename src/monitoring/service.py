@@ -33,7 +33,9 @@ class MonitoringService:
             with open(json_file_path, "r", encoding="utf-8") as file_handler:
                 existing_data = CaseProgressionResponse(**json.load(file_handler))
 
+        # Return cached data immediately if not forcing a refresh, ensuring it's sorted
         if existing_data and not force_refresh:
+            existing_data.timeline.sort(key=lambda x: x.date if x.date else "0000-00-00", reverse=True)
             return existing_data
 
         all_new_events = []
@@ -89,6 +91,7 @@ class MonitoringService:
         if not all_new_events:
             print("[WARN] No data found in URL, fallback, or local files.")
             if existing_data:
+                existing_data.timeline.sort(key=lambda x: x.date if x.date else "0000-00-00", reverse=True)
                 return existing_data
             
             return CaseProgressionResponse(
@@ -106,7 +109,7 @@ class MonitoringService:
             timeline=all_new_events
         )
 
-        # Merge logic with existing cache
+        # Merge logic with existing cache file if it was already available
         if existing_data:
             added_count = 0
             existing_events = {(ev.date, ev.title, ev.source) for ev in existing_data.timeline}
@@ -116,7 +119,7 @@ class MonitoringService:
                     existing_data.timeline.append(new_event)
                     added_count += 1
             
-            print(f"[DEBUG] Appended {added_count} new events to the existing timeline.")
+            print(f"[DEBUG] Appended {added_count} new events to the existing timeline file.")
             
             existing_data.current_stage = new_data.current_stage
             existing_data.next_recommended_action = new_data.next_recommended_action
@@ -126,11 +129,11 @@ class MonitoringService:
         else:
             final_data = new_data
 
-        # 3. Sort the timeline anti-chronologically (newest dates first)
-        # Using "0000-00-00" as a fallback safely pushes items with missing/null dates to the bottom
+        # 3. Sort the combined timeline anti-chronologically (newest dates first)
+        # Using "0000-00-00" as a fallback safely pushes items with missing dates to the bottom
         final_data.timeline.sort(key=lambda x: x.date if x.date else "0000-00-00", reverse=True)
 
-        # Save to JSON in the process folder
+        # Save the sorted, merged timeline back to JSON in the process folder
         with open(json_file_path, "w", encoding="utf-8") as file_handler:
             file_handler.write(final_data.model_dump_json(indent=4))
 
