@@ -43,3 +43,8 @@ Thumbs.db
 
 # Jupyter
 .ipynb_checkpoints/
+
+# Dados
+dados_processo2/
+dados_processo1/
+dados.xlsx
