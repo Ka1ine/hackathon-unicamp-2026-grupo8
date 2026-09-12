@@ -57,7 +57,7 @@ class MonitoringService:
             web_response = self.extractor.extract_progression(process_id, web_text)
             if web_response and web_response.timeline:
                 for ev in web_response.timeline:
-                    ev.source = "web"  # Tag source as web
+                    ev.source = "web"
                     all_new_events.append(ev)
                 latest_stage = web_response.current_stage
                 latest_action = web_response.next_recommended_action
@@ -79,7 +79,7 @@ class MonitoringService:
                 file_response = self.extractor.extract_progression(process_id, local_text)
                 if file_response and file_response.timeline:
                     for ev in file_response.timeline:
-                        ev.source = "file"  # Tag source as file
+                        ev.source = "file"
                         all_new_events.append(ev)
                     if not latest_stage:
                         latest_stage = file_response.current_stage
@@ -125,6 +125,10 @@ class MonitoringService:
             final_data = existing_data
         else:
             final_data = new_data
+
+        # 3. Sort the timeline anti-chronologically (newest dates first)
+        # Using "0000-00-00" as a fallback safely pushes items with missing/null dates to the bottom
+        final_data.timeline.sort(key=lambda x: x.date if x.date else "0000-00-00", reverse=True)
 
         # Save to JSON in the process folder
         with open(json_file_path, "w", encoding="utf-8") as file_handler:
