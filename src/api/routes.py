@@ -23,15 +23,15 @@ def get_case_progression(
     process_id: str,
     force_refresh: bool = Query(False, description="Set to true to force a new web scrape")
 ):
-    """
-    Fetches the timeline progression of a specific case.
-    Uses local cache unless force_refresh is requested.
-    """
     try:
-        return service.get_or_update_case(process_id, force_refresh)
+        # Use explicit kwargs and assign a default local file path
+        return service.get_or_update_case(
+            process_id=process_id, 
+            url="data/sample_case.html", 
+            force_refresh=force_refresh
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro no monitoramento: {str(e)}")
-
 
 @router.get("/process/{process_id}/full", response_model=CaseMasterOverview)
 def get_full_case_overview(

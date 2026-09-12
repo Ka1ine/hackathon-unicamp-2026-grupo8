@@ -16,24 +16,25 @@ class PublicCaseScraper:
         }
 
     def scrape_jusbrasil_or_public(self, url_or_path: str) -> str:
-        """
-        Determines the source (local file or URL), fetches the HTML content,
-        and extracts relevant text blocks representing legal movements.
-        """
+        path_str = str(url_or_path)
         html_content = ""
 
-        if os.path.exists(url_or_path):
-            print(f"[DEBUG] Reading from local file: {url_or_path}")
-            with open(url_or_path, "r", encoding="utf-8", errors="ignore") as file_handler:
+        if os.path.exists(path_str):
+            print(f"[DEBUG] Reading from local file: {path_str}")
+            with open(path_str, "r", encoding="utf-8", errors="ignore") as file_handler:
                 html_content = file_handler.read()
-        else:
+        elif path_str.startswith("http"):
             try:
-                response = requests.get(url_or_path, headers=self.headers, timeout=15, verify=False)
+                # Reduce timeout to 5 seconds to prevent long loading states
+                response = requests.get(path_str, headers=self.headers, timeout=5, verify=False)
                 response.raise_for_status()
                 html_content = response.text
             except Exception as e:
-                print(f"[ERROR] Falha ao fazer o scraping da URL {url_or_path}: {e}")
+                print(f"[ERROR] Failed scraping URL {path_str}: {e}")
                 return ""
+        else:
+            print(f"[ERROR] Path not found and not a valid URL: {path_str}")
+            return ""
 
         extracted_text = []
         soup = BeautifulSoup(html_content, "html.parser")

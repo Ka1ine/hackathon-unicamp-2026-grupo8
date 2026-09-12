@@ -9,17 +9,22 @@ from src.monitoring.scraper import PublicCaseScraper
 class MonitoringService:
     """Handles the retrieval, updating, and caching of case progression data."""
 
-    def __init__(self, cache_dir: Path = Path("data/monitoramento_cache")):
-        """Initializes the service with caching directory and processing dependencies."""
-        self.cache_dir = cache_dir
-        self.cache_dir.mkdir(exist_ok=True, parents=True)
+    def __init__(self, base_data_dir: Path = Path("data/processos_exemplo")):
+        """Initializes the service to store JSONs in the same directory as the process files."""
+        self.base_data_dir = base_data_dir
         self.extractor = CaseProgressionExtractor()
         self.scraper = PublicCaseScraper()
 
     def get_or_update_case(self, process_id: str, url: str, force_refresh: bool = False) -> CaseProgressionResponse:
         """Fetches new case data, merges it with existing records, and caches the result."""
+        # Target the specific process folder
+        process_dir = self.base_data_dir / process_id
+        process_dir.mkdir(exist_ok=True, parents=True) 
+        
+        # Save the file directly inside the process folder instead of a global cache
+        json_file_path = process_dir / f"{process_id}_timeline.json"
+        
         existing_data = None
-        json_file_path = self.cache_dir / f"{process_id}.json"
 
         # Load existing data if available
         if json_file_path.exists():
@@ -31,12 +36,22 @@ class MonitoringService:
             return existing_data
 
         # Scrape the latest online data
-        print(f"[DEBUG] Scraping new data for {process_id}...")
+        print(f"[DEBUG] Attempting to scrape new data for {process_id} from {url}...")
         raw_scraped_text = self.scraper.scrape_jusbrasil_or_public(url)
         
+        # SKIP LOGIC: If page doesn't exist or scraper returns nothing, skip gracefully
         if not raw_scraped_text:
-            print("[WARN] Scraper returned empty text. Returning existing data if available.")
-            return existing_data if existing_data else None
+            print("[WARN] Target page not found or empty. Skipping scraping.")
+            if existing_data:
+                return existing_data
+            
+            # Return an empty standardized response if no cache and no data exists
+            return CaseProgressionResponse(
+                current_stage="Outros",
+                next_recommended_action="Aguardar (Nenhuma ação imediata)",
+                process_id=process_id,
+                timeline=[]
+            )
 
         # Extract structured progression using OpenAI
         new_data = self.extractor.extract_progression(process_id, raw_scraped_text)
@@ -62,7 +77,7 @@ class MonitoringService:
         else:
             final_data = new_data
 
-        # Save the fully merged timeline back to JSON
+        # Save the fully merged timeline back to JSON in the process folder
         with open(json_file_path, "w", encoding="utf-8") as file_handler:
             file_handler.write(final_data.model_dump_json(indent=4))
 
