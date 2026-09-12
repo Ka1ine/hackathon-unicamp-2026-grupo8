@@ -26,7 +26,7 @@ class MonitoringService:
         process_dir = self.base_data_dir / process_id
         process_dir.mkdir(exist_ok=True, parents=True) 
         
-        json_file_path = process_dir / f"{process_id}_timeline.json"
+        json_file_path = process_dir / f"_{process_id}.json"
         existing_data = None
 
         if json_file_path.exists():
