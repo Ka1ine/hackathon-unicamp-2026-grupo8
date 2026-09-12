@@ -136,23 +136,33 @@ def render_processos():
         }
 
         .process-card-row {
-            transition: border-color .16s ease, background .16s ease, transform .16s ease;
+            margin-bottom: 0;
+            transition: background .16s ease;
         }
 
         div[class*="st-key-process_card_"] {
             position: relative;
+            margin-bottom: 8px;
+        }
+
+        /* Remove o invólucro intermediário do botão do cálculo de layout.
+           Assim, o botão passa a se ancorar no cartão, sem ocultá-lo. */
+        div[class*="st-key-process_card_"]
+        [data-testid="stElementContainer"]:has(> [data-testid="stButton"]) {
+            display: contents;
         }
 
         div[class*="st-key-process_card_"] [data-testid="stButton"] {
             position: absolute;
-            inset: 0 0 8px;
+            inset: 0;
             z-index: 3;
+            height: 100%;
         }
 
         div[class*="st-key-process_card_"] [data-testid="stButton"] button {
             width: 100%;
             height: 100%;
-            min-height: 78px;
+            min-height: 0;
             opacity: 0;
             cursor: pointer;
         }
@@ -161,7 +171,7 @@ def render_processos():
         div[class*="st-key-process_card_"]:has(button:focus-visible) .process-card-row {
             background: #303540;
             border-color: #ffb13370;
-            transform: translateY(-1px);
+            transform: none !important;
         }
 
         div[class*="st-key-process_card_"]:has(button:focus-visible) .process-card-row {
