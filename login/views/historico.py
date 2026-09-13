@@ -4,6 +4,7 @@ import unicodedata
 import pandas as pd
 import streamlit as st
 
+from components.preferencias import aplicar_preferencias_interface, perfil
 from services.historico import carregar_historico
 
 
@@ -42,12 +43,14 @@ def _aplicar_estilo():
         [data-testid="stSidebar"] .stButton button:hover { color: #ffb133; background: #ffb13312;
             border-color: #ffb13335; }
         div[class*="st-key-nav_processos"] [data-testid="stButton"] button,
-        div[class*="st-key-nav_historico"] [data-testid="stButton"] button {
+        div[class*="st-key-nav_historico"] [data-testid="stButton"] button,
+        div[class*="st-key-nav_configuracoes"] [data-testid="stButton"] button {
             display: flex !important; justify-content: flex-start !important; gap: 10px;
             text-align: left !important;
         }
         div[class*="st-key-nav_processos"] [data-testid="stButton"] button > div,
-        div[class*="st-key-nav_historico"] [data-testid="stButton"] button > div {
+        div[class*="st-key-nav_historico"] [data-testid="stButton"] button > div,
+        div[class*="st-key-nav_configuracoes"] [data-testid="stButton"] button > div {
             flex: 0 0 auto !important; width: auto !important;
         }
         div[class*="st-key-nav_historico"] [data-testid="stButton"] button {
@@ -65,13 +68,14 @@ def _aplicar_estilo():
 
 
 def _render_sidebar():
+    nome_perfil, empresa_perfil = perfil()
     with st.sidebar:
         st.markdown(
-            """
+            f"""
             <div class="marca">ENTER<span>■</span></div>
             <div class="perfil"><div class="avatar">YK</div><div>
-                <div class="perfil-nome">Yasmin Kaline</div>
-                <div class="perfil-empresa">Banco Unicamp</div>
+                <div class="perfil-nome">{nome_perfil}</div>
+                <div class="perfil-empresa">{empresa_perfil}</div>
             </div></div>
             """,
             unsafe_allow_html=True,
@@ -90,6 +94,14 @@ def _render_sidebar():
             key="nav_historico",
             use_container_width=True,
         )
+        if st.button(
+            "Configurações",
+            icon=":material/settings:",
+            key="nav_configuracoes",
+            use_container_width=True,
+        ):
+            from views.configuracoes import render_configuracoes
+            st.switch_page(st.Page(render_configuracoes, url_path="configuracoes"))
         st.divider()
         if st.button("Sair da conta", use_container_width=True):
             st.session_state.clear()
@@ -99,6 +111,7 @@ def _render_sidebar():
 def render_historico():
     st.set_page_config(page_title="Histórico | Enter", layout="wide", initial_sidebar_state="expanded")
     _aplicar_estilo()
+    aplicar_preferencias_interface()
     _render_sidebar()
 
     st.title("Histórico")
@@ -149,13 +162,13 @@ def render_historico():
     taxa_exito = (
         (filtrados["resultado_macro"] == "Êxito").mean() * 100 if total_processos else 0
     )
-    col_kpi1, col_kpi2, col_kpi3, col_kpi4 = st.columns(4)
-    for coluna, titulo, valor in (
-        (col_kpi1, "Processos encontrados", f"{total_processos:,}".replace(",", ".")),
-        (col_kpi2, "Taxa de êxito", f"{taxa_exito:.1f}%".replace(".", ",")),
-        (col_kpi3, "Valor total da causa", _moeda(filtrados["valor_causa"].sum())),
-        (col_kpi4, "Condenações/indenizações", _moeda(filtrados["valor_condenacao"].sum())),
-    ):
+    indicadores = (
+        ("Processos encontrados", f"{total_processos:,}".replace(",", ".")),
+        ("Taxa de êxito", f"{taxa_exito:.1f}%".replace(".", ",")),
+        ("Valor total da causa", _moeda(filtrados["valor_causa"].sum())),
+        ("Condenações/indenizações", _moeda(filtrados["valor_condenacao"].sum())),
+    )
+    for coluna, (titulo, valor) in zip(st.columns(len(indicadores)), indicadores):
         coluna.markdown(
             f'<div class="kpi"><div class="kpi-label">{titulo}</div><div class="kpi-value">{valor}</div></div>',
             unsafe_allow_html=True,
@@ -181,15 +194,8 @@ def render_historico():
     st.markdown(f'<div class="section-title">Processos ({total_processos:,})</div>'.replace(",", "."), unsafe_allow_html=True)
     exibir = filtrados[
         [
-            "processo",
-            "UF",
-            "Assunto",
-            "Sub-assunto",
-            "resultado_macro",
-            "resultado_micro",
-            "valor_causa",
-            "valor_condenacao",
-            "subsidios_disponiveis",
+            "processo", "UF", "Assunto", "Sub-assunto", "resultado_macro",
+            "resultado_micro", "valor_causa", "valor_condenacao", "subsidios_disponiveis",
         ]
     ].rename(
         columns={

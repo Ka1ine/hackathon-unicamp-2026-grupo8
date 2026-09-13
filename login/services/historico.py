@@ -17,6 +17,11 @@ def carregar_historico():
     return _ler_historico(estatistica.st_mtime_ns, estatistica.st_size)
 
 
+def limpar_cache_historico():
+    """Força a próxima visualização a reler a planilha de origem."""
+    _ler_historico.clear()
+
+
 @st.cache_data(show_spinner=False)
 def _ler_historico(versao, tamanho):
     """Lê novamente a planilha quando o arquivo de origem for atualizado."""

@@ -4,6 +4,7 @@ import unicodedata
 import streamlit as st
 
 
+from components.preferencias import aplicar_preferencias_interface, perfil
 from services.processos import carregar_processos
 
 
@@ -109,7 +110,8 @@ def render_processos():
         }
 
         div[class*="st-key-nav_processos"] [data-testid="stButton"] button,
-        div[class*="st-key-nav_historico"] [data-testid="stButton"] button {
+        div[class*="st-key-nav_historico"] [data-testid="stButton"] button,
+        div[class*="st-key-nav_configuracoes"] [data-testid="stButton"] button {
             display: flex !important;
             justify-content: flex-start !important;
             gap: 10px;
@@ -117,7 +119,8 @@ def render_processos():
         }
 
         div[class*="st-key-nav_processos"] [data-testid="stButton"] button > div,
-        div[class*="st-key-nav_historico"] [data-testid="stButton"] button > div {
+        div[class*="st-key-nav_historico"] [data-testid="stButton"] button > div,
+        div[class*="st-key-nav_configuracoes"] [data-testid="stButton"] button > div {
             flex: 0 0 auto !important;
             width: auto !important;
         }
@@ -270,17 +273,19 @@ def render_processos():
         """,
         unsafe_allow_html=True,
     )
+    aplicar_preferencias_interface()
+    nome_perfil, empresa_perfil = perfil()
 
     with st.sidebar:
         st.markdown(
-            """
+            f"""
             <div class="marca">ENTER<span>■</span></div>
 
             <div class="perfil">
                 <div class="avatar">YK</div>
                 <div>
-                    <div class="perfil-nome">Yasmin Kaline</div>
-                    <div class="perfil-empresa">Banco Unicamp</div>
+                    <div class="perfil-nome">{nome_perfil}</div>
+                    <div class="perfil-empresa">{empresa_perfil}</div>
                 </div>
             </div>
 
@@ -302,6 +307,14 @@ def render_processos():
         ):
             from views.historico import render_historico
             st.switch_page(st.Page(render_historico, url_path="historico"))
+        if st.button(
+            "Configurações",
+            icon=":material/settings:",
+            key="nav_configuracoes",
+            use_container_width=True,
+        ):
+            from views.configuracoes import render_configuracoes
+            st.switch_page(st.Page(render_configuracoes, url_path="configuracoes"))
 
         st.divider()
 
