@@ -3,7 +3,7 @@
 **Grupo 8**
 
 🎥 **[Vídeo de demonstração](https://www.youtube.com/watch?v=Kzd8DvZzdxc)**  
-📊 **[Slides da apresentação](COLE_AQUI_O_LINK_DOS_SLIDES)**
+📊 **[Slides da apresentação](https://www.figma.com/deck/v37WT2qfCwyYOLTvJyMp1p)**
 
 **17 e 18 de Abril de 2026**
 
