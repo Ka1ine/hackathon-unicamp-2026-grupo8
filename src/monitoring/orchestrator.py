@@ -12,7 +12,6 @@ class CaseOrchestrator:
 
     def __init__(self):
         """Initializes the services required for orchestrating case data."""
-        self.subsidio_service = SubsidioService()
         self.timeline_service = MonitoringService()
         self.policy_service = PolicyService()
 
@@ -22,12 +21,6 @@ class CaseOrchestrator:
         overview = CaseMasterOverview(process_id=process_id)
         
         try:
-            # 1. Fetch or load document subsidios safely
-            overview.subsidios_data = self.subsidio_service.analyze_process_subsidios(
-                force_refresh=force_refresh,
-                process_id=process_id
-            )
-            
             # 2. Fetch or load timeline safely
             overview.timeline_data = self.timeline_service.get_or_update_case(
                 force_refresh=force_refresh,
@@ -49,16 +42,18 @@ class CaseOrchestrator:
             master_cache_path = process_dir / f"_{process_id}.json"
             
             # Convert to dictionary to remove redundant IDs before saving
-            output_dict = overview.model_dump()
-            if output_dict.get("subsidios_data") and "process_id" in output_dict["subsidios_data"]:
-                del output_dict["subsidios_data"]["process_id"]
-            if output_dict.get("timeline_data") and "process_id" in output_dict["timeline_data"]:
-                del output_dict["timeline_data"]["process_id"]
+            output_dict = overview.model_dump(exclude_none=True)
+
+            # Keep only the timeline cleanups
+            if output_dict.get("timeline_data"):
+                if "process_id" in output_dict["timeline_data"]:
+                    del output_dict["timeline_data"]["process_id"]
+                if "risk_level" in output_dict["timeline_data"]:
+                    del output_dict["timeline_data"]["risk_level"]
 
             with open(master_cache_path, "w", encoding="utf-8") as f:
                 json.dump(output_dict, f, indent=4, ensure_ascii=False)
 
-            # Mark as completed if all operations succeed
             overview.status = ProcessingStatus.COMPLETED
 
         except Exception as e:

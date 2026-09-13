@@ -17,5 +17,4 @@ class CaseMasterOverview(BaseModel):
     process_id: str = Field(...)
     status: ProcessingStatus = ProcessingStatus.COMPLETED
     policy_data: Optional[PolicyDecision] = None
-    subsidios_data: Optional[CompleteSubsidioAnalysis] = None
     timeline_data: Optional[CaseProgressionResponse] = None
