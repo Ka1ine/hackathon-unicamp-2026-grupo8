@@ -13,6 +13,7 @@
       <button role="tab" id="tab-analysis" aria-controls="panel-analysis" aria-selected="false" tabindex="-1" data-tab="analysis">Análise</button>
       <button role="tab" id="tab-documents" aria-controls="panel-documents" aria-selected="true" data-tab="documents">Documentos <span id="doc-count"></span></button>
       <button role="tab" id="tab-agreement" aria-controls="panel-agreement" aria-selected="false" tabindex="-1" data-tab="agreement">Acordo</button>
+      <button role="tab" id="tab-timeline" aria-controls="panel-timeline" aria-selected="false" tabindex="-1" data-tab="timeline">Linha do tempo <span id="timeline-count"></span></button>
     </div>
     <button id="chat-toggle" class="primary" aria-expanded="false" aria-controls="chat-panel">✦ Abrir assistente</button>
   </div>
@@ -31,6 +32,13 @@
       </section>
       <section id="panel-analysis" role="tabpanel" aria-labelledby="tab-analysis" hidden><div class="placeholder"><span class="placeholder-icon">◎</span><h2>Análise em desenvolvimento</h2><p>A avaliação das evidências e a recomendação jurídica estarão disponíveis aqui.</p><span class="status">Em breve</span></div></section>
       <section id="panel-agreement" role="tabpanel" aria-labelledby="tab-agreement" hidden><div class="placeholder"><span class="placeholder-icon">◇</span><h2>Acordo em desenvolvimento</h2><p>Este espaço será destinado à proposta e ao acompanhamento da negociação.</p><span class="status">Em breve</span></div></section>
+      <section id="panel-timeline" role="tabpanel" aria-labelledby="tab-timeline" hidden>
+        <div class="timeline-panel">
+          <header class="timeline-header"><div><p class="eyebrow">ANDAMENTO PROCESSUAL</p><h2>Linha do tempo</h2><p class="timeline-description">Eventos extraídos dos autos, do mais recente para o mais antigo.</p></div><span id="timeline-stage" class="status" hidden></span></header>
+          <div id="timeline-summary" class="timeline-summary" hidden></div>
+          <div id="timeline-list" class="timeline-list" aria-live="polite"></div>
+        </div>
+      </section>
     </section>
     <aside id="chat-panel" class="chat-panel" hidden aria-label="Assistente do processo">
       <header class="chat-header"><div><h2>✦ Assistente do processo</h2><p id="chat-number"></p></div><button id="chat-close" aria-label="Fechar chat">×</button></header>

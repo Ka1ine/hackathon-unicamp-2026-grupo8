@@ -1,13 +1,45 @@
-"""Documentos locais e metadados de apresentação, sem análise jurídica ou API."""
+"""Documentos locais e dados de apresentação do detalhe de um processo."""
 import base64
 import hashlib
 from io import BytesIO
+import json
 from pathlib import Path
 import re
 
 from pypdf import PdfReader
 
 from services.processos import carregar_processos
+
+
+def carregar_linha_do_tempo(numero, erros):
+    """Lê os eventos extraídos dos autos e descarta outras fontes."""
+    timeline_vazia = {
+        "current_stage": None,
+        "next_recommended_action": None,
+        "events": [],
+    }
+    pasta_processo = Path(__file__).resolve().parents[2] / "data" / "example_cases" / str(numero)
+    arquivos_json = sorted(pasta_processo.glob("*.json"))
+    if not arquivos_json:
+        return timeline_vazia
+
+    try:
+        conteudo = json.loads(arquivos_json[0].read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        erros.append("Não foi possível ler a linha do tempo deste processo.")
+        return timeline_vazia
+
+    timeline = conteudo.get("timeline_data") or {}
+    eventos = timeline.get("timeline") or []
+    eventos_dos_autos = [
+        evento for evento in eventos
+        if isinstance(evento, dict) and evento.get("source") == "file"
+    ]
+    return {
+        "current_stage": timeline.get("current_stage"),
+        "next_recommended_action": timeline.get("next_recommended_action"),
+        "events": eventos_dos_autos,
+    }
 
 
 def nome_documento(nome):
@@ -66,6 +98,7 @@ def carregar_detalhes(numero):
     vara = re.search(r"Processo\s+n[º°o.]?\s+[\d.\-]+\s*[-–]\s*(.*?)\s*[-–]\s*Página", texto, re.I)
     valor = re.search(r"valor liberado de\s+R\$\s*([\d.]+,\d{2})", texto, re.I)
     parcela = re.search(r"parcelas mensais de\s+R\$\s*([\d.]+,\d{2})", texto, re.I)
+    linha_do_tempo = carregar_linha_do_tempo(processo["id"], erros)
     return {
         "id": processo["id"], "name": processo["nome"],
         "amount": float(processo["valor"]),
@@ -74,4 +107,5 @@ def carregar_detalhes(numero):
         "loan": "R$ " + valor.group(1) if valor else "Não informado",
         "installment": "R$ " + parcela.group(1) if parcela else "Não informado",
         "status": "A avaliar", "documents": documentos,
+        "timeline": linha_do_tempo,
     }, erros

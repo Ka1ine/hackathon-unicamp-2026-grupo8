@@ -24,6 +24,14 @@ class DetalhesTest(unittest.TestCase):
                 self.assertEqual(len(doc['previews']), doc['pages'])
                 self.assertTrue(all(p['image'] or p['text'] for p in doc['previews']))
 
+    def test_linha_do_tempo_usa_apenas_eventos_extraidos_dos_autos(self):
+        processos, _ = carregar_processos()
+        detalhes, erros = carregar_detalhes(processos[0]['id'])
+        self.assertEqual(erros, [])
+        eventos = detalhes['timeline']['events']
+        self.assertTrue(eventos)
+        self.assertTrue(all(evento['source'] == 'file' for evento in eventos))
+
     def test_sem_previa_usa_texto_e_numero_desconhecido_nao_abre_outro_caso(self):
         processos, _ = carregar_processos()
         with tempfile.TemporaryDirectory() as directory:

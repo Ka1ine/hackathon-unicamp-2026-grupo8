@@ -11,6 +11,13 @@
   $('status').textContent = process.status;
   $('chat-number').textContent = process.id;
   $('doc-count').textContent = process.documents.length;
+  const timeline = process.timeline || {events: []};
+  const timelineEvents = [...(timeline.events || [])].sort((left,right) => {
+    const leftDate = typeof left.date === 'string' ? left.date : '';
+    const rightDate = typeof right.date === 'string' ? right.date : '';
+    return rightDate.localeCompare(leftDate);
+  });
+  $('timeline-count').textContent = timelineEvents.length;
   for (const [label, value] of [['Instituição',process.bank],['Vara / tribunal',process.court],['Valor da causa',money(process.amount)],['Valor do empréstimo',process.loan],['Valor da parcela',process.installment]]) {
     const group = document.createElement('div'), dt = document.createElement('dt'), dd = document.createElement('dd');
     dt.textContent = label; dd.textContent = value; group.append(dt,dd); $('metadata').append(group);
@@ -71,6 +78,58 @@
   $('next').addEventListener('click',()=>{if(currentDocument&&page<currentDocument.pages){page++;renderPage();}});
   $('previous').disabled=true;$('next').disabled=true;
   if(process.documents.length)selectDocument(process.documents[0]);
+  function formatTimelineDate(value) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(value || '')) return 'Data não informada';
+    const [year, month, day] = value.split('-');
+    return `${day}/${month}/${year}`;
+  }
+  function renderTimeline() {
+    const list = $('timeline-list');
+    if (timeline.current_stage) {
+      $('timeline-stage').hidden = false;
+      $('timeline-stage').textContent = timeline.current_stage;
+    }
+    if (timeline.next_recommended_action) {
+      $('timeline-summary').hidden = false;
+      $('timeline-summary').textContent = `Próxima ação recomendada: ${timeline.next_recommended_action}`;
+    }
+    if (!timelineEvents.length) {
+      const empty = document.createElement('p');
+      empty.className = 'timeline-empty';
+      empty.textContent = 'Ainda não há eventos extraídos dos autos para este processo.';
+      list.append(empty);
+      return;
+    }
+    for (const event of timelineEvents) {
+      const item = document.createElement('article');
+      item.className = 'timeline-event';
+      const date = document.createElement('time');
+      date.className = 'timeline-date';
+      date.dateTime = event.date || '';
+      date.textContent = formatTimelineDate(event.date);
+      const marker = document.createElement('span');
+      marker.className = 'timeline-marker';
+      marker.setAttribute('aria-hidden', 'true');
+      const card = document.createElement('div');
+      card.className = 'timeline-card';
+      const heading = document.createElement('h3');
+      heading.textContent = event.title || 'Movimentação processual';
+      const tags = document.createElement('div');
+      tags.className = 'timeline-tags';
+      for (const label of [event.stage, event.action_required]) {
+        if (!label) continue;
+        const tag = document.createElement('span');
+        tag.textContent = label;
+        tags.append(tag);
+      }
+      const summary = document.createElement('p');
+      summary.textContent = event.summary || 'Sem descrição disponível.';
+      card.append(heading, tags, summary);
+      item.append(date, marker, card);
+      list.append(item);
+    }
+  }
+  renderTimeline();
   function setChat(open){
     chatOpen=open;$('chat-panel').hidden=!open;$('workspace').classList.toggle('chat-open',open);
     $('chat-toggle').setAttribute('aria-expanded',String(open));$('chat-toggle').textContent=open?'✦ Recolher assistente':'✦ Abrir assistente';
