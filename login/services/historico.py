@@ -6,7 +6,7 @@ import streamlit as st
 
 
 RAIZ = Path(__file__).resolve().parents[2]
-ARQUIVO_DADOS = RAIZ / "data" / "dados.xlsx"
+ARQUIVO_DADOS = RAIZ / "data" / "Hackaton_Enter_Base_Candidatos.xlsx"
 
 
 def carregar_historico():

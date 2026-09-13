@@ -2,14 +2,11 @@
 from pathlib import Path
 from decimal import Decimal
 import re
-
 from pypdf import PdfReader
 import streamlit as st
 
 RAIZ = Path(__file__).resolve().parents[2]
-PASTA_DADOS = RAIZ / "data"
-PASTAS = ("dados_processo1", "dados_processo2")
-
+PASTA_DADOS = RAIZ / "data" / "example_cases"
 
 def extrair_processo(caminho):
     reader = PdfReader(caminho)
@@ -31,26 +28,34 @@ def extrair_processo(caminho):
         "fonte": str(caminho),
     }
 
-
 @st.cache_data(show_spinner=False)
 def _ler_pdf(caminho, versao):
-    # mtime e tamanho invalidam o cache quando o documento muda.
     return extrair_processo(Path(caminho))
-
 
 def carregar_processos(raiz=RAIZ):
     processos, erros = [], []
-    pasta_dados = Path(raiz) / "data"
-    for pasta in PASTAS:
-        diretorio = pasta_dados / pasta
-        arquivos = sorted(diretorio.glob("01_Autos_Processo_*.pdf"))
-        if len(arquivos) != 1:
-            erros.append(f"{pasta}: esperado um PDF de autos; encontrados {len(arquivos)}.")
+    pasta_dados = Path(raiz) / "data" / "example_cases"
+    
+    if not pasta_dados.exists():
+        return processos, [f"Diretório base de processos não encontrado: {pasta_dados}"]
+        
+    # Iteração dinâmica nas subpastas
+    for diretorio in pasta_dados.iterdir():
+        if not diretorio.is_dir():
             continue
+            
+        # Busca por autos com fallback para qualquer PDF na pasta caso o prefixo numérico tenha sido removido
+        arquivos = sorted(diretorio.glob("*Autos*.pdf")) or sorted(diretorio.glob("*.pdf"))
+        
+        if not arquivos:
+            erros.append(f"{diretorio.name}: esperado um PDF de autos; encontrados 0.")
+            continue
+            
         arquivo = arquivos[0]
         try:
             stat = arquivo.stat()
             processos.append(_ler_pdf(str(arquivo), (stat.st_mtime_ns, stat.st_size)))
         except Exception as exc:
             erros.append(f"Não foi possível ler {arquivo.name}: {exc}")
+            
     return processos, erros
