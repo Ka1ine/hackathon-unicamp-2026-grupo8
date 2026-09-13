@@ -4,10 +4,11 @@
 
 ## Pré-requisitos
 
-As dependências necessárias para rodar a solução:
+As dependências necessárias para rodar a solução localmente:
 
-- **Python 3.12+**
-- Arquivo `.env` na raiz com a chave da API: `OPENAI_API_KEY=sk-...`
+* **Python 3.12+**
+* **Poppler (`pdftoppm`)**: Necessário no PATH do sistema **apenas** para a geração das imagens de prévia dos PDFs. Caso não seja instalado, a plataforma continua funcionando utilizando apenas a extração de texto bruto dos documentos.
+* *Opcional*: Arquivo `.env` na raiz com chaves de API (ex: `OPENAI_API_KEY=sk-...`) preparado para integrações futuras (atualmente a demonstração não realiza chamadas a LLMs externos).
 
 ## Instalação
 
@@ -27,42 +28,56 @@ venv\Scripts\activate           # Windows
 pip install -r requirements.txt
 ```
 
-## Execução da API
+## Preparação de Dados (Prévias de PDFs)
 
-Inicie o servidor backend (FastAPI):
+A plataforma utiliza os PDFs reais alocados nas pastas `data/0801234-56-2024-8-10-0001` e `data/0654321-09-2024-8-04-0001`. Para gerar a visualização paginada (imagens) na tela de Detalhes do Processo, execute o script de pré-renderização:
 
 ```bash
-uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
+python login/services/gerar_previas.py
 ```
 
-A documentação interativa (Swagger UI) estará acessível automaticamente em `http://localhost:8000/docs`.
+*(Nota: As imagens geradas serão salvas em cache na pasta `.previews` junto aos originais, associadas por um hash para garantir a integridade em caso de alteração no documento. O PDF original nunca é alterado).*
+
+## Execução da Aplicação (Streamlit)
+
+A interface de usuário e demonstração é baseada em Streamlit. Inicie o servidor frontend executando:
+
+```bash
+python -m streamlit run app.py
+```
+
+Acesse `http://localhost:8501` se o navegador não abrir automaticamente.
+
+**Credenciais de Demonstração:**
+
+* **Email:** `demo@enter.com`
+* **Senha:** `123456`
+
+*(Nota: O login é apenas visual e mockado para demonstração. Ao navegar, os dados dos processos, como nome da parte e valor da causa, são extraídos em tempo real via OCR/texto dos PDFs mapeados).*
 
 ## Testes Automatizados
 
-O sistema conta com uma suíte de testes baseada no `pytest` para validar a lógica de extração, análise de documentos e scraping em um ambiente isolado.
+A suíte de testes foi migrada para o `unittest` nativo do Python, garantindo cobertura do login, extração de processos via `pypdf`, filtros de busca, paginação, download de PDFs e fallbacks visuais.
 
 Para rodar a bateria de testes:
 
 ```bash
-pytest -v
+python -m unittest discover -s login/tests
 ```
 
-*(Nota: O arquivo `pytest.ini` garante que o framework localize os módulos na pasta `src` corretamente).*
+## Estrutura do Projeto Atualizada
 
-## Dados
-
-Coloque os arquivos de dados fornecidos na pasta `data/`. Consulte [`data/README.md`](https://www.google.com/search?q=./data/README.md) para instruções detalhadas.
-
-## Estrutura do Projeto
+A arquitetura evoluiu para suportar a visualização modular via Streamlit e iframes integrados:
 
 ```text
-├── data/             # diretório de dados (HTML, PDF, TXT) e cache (não versionado)
-├── docs/             # documentação adicional e apresentações
-├── src/              # código-fonte da aplicação (API, extratores, serviços)
-├── tests/            # testes automatizados em pytest
-├── .env.example      # template das variáveis de ambiente
-├── pytest.ini        # configuração de resolução de caminhos do pytest
-├── requirements.txt  # bibliotecas e dependências
-├── README.md         # descrição geral e propósito do desafio
-└── SETUP.md          # este arquivo de instruções
+├── .streamlit/       # configuração visual do tema (config.toml)
+├── assets/           # arquivos estáticos, HTML, CSS e JS (usados nos iframes de Detalhes)
+├── data/             # diretório de dados (PDFs dos autos), histórico xlsx e cache de prévias
+├── services/         # lógica de negócio (extração pypdf, histórico, geração de prévias)
+├── views/            # telas da aplicação Streamlit (processos, histórico, detalhes, configurações)
+├── tests/            # testes automatizados em unittest (podem estar na pasta login/tests)
+├── app.py            # orquestrador e tela de login principal (ponto de entrada Streamlit)
+├── .env.example      # template das variáveis de ambiente para futura integração LLM
+├── requirements.txt  # bibliotecas e dependências (Streamlit, pypdf, pandas, etc.)
+└── README.md         # descrição geral e propósito do desafio
 ```

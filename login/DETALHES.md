@@ -17,7 +17,7 @@ simuladas. Não há chamadas de LLM, autenticação nova ou persistência.
 
 ## Prévias locais
 
-Os PDFs originais estão em `data/dados_processo1` e `data/dados_processo2`.
+Os PDFs originais estão em `data/0801234-56-2024-8-10-0001` e `data/0654321-09-2024-8-04-0001`.
 As imagens pré-renderizadas ficam em `.previews/<hash-do-pdf>/page-N.png`
 nessas mesmas pastas (já ignoradas pelo Git). Não se altera o PDF original.
 O hash impede uma imagem antiga de ser associada a um documento alterado.
