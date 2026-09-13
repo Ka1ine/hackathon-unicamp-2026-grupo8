@@ -62,6 +62,7 @@ class PolicyService:
         row = result_df.iloc[0]
 
         policy_decision = PolicyDecision(
+            decision_explanation=row["explicacao_decisao"],
             estimated_operacional_cost=float(row["custo_operacional_estimado"]),
             next_recommended_action=row["decisao_sugerida"],
             proposed_value_initial=float(row["valor_sugerido_proposta_inicial"]),

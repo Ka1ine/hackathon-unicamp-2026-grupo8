@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field
 class PolicyDecision(BaseModel):
     """Structured output for the Settlement Policy Engine."""
     
+    decision_explanation: str = Field(..., description="Explicação baseada em dados históricos e risco individualizado.")
     estimated_operacional_cost: float = Field(..., description="Custo dinâmico calculado para manter a defesa.")
     next_recommended_action: str = Field(..., description="Ação sugerida: Defesa, Acordo Estratégico ou Acordo Mandatório.")
     proposed_value_initial: float = Field(..., description="Valor calculado para primeira oferta de acordo.")

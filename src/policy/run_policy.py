@@ -57,6 +57,7 @@ class SettlementEngine:
             categorical_features=CAT_COLS, learning_rate=0.05, max_iter=200, max_leaf_nodes=31, random_state=42
         )
         self.custo_operacional_defesa = custo_operacional_defesa
+        self.history_stats = {}
         self.limiar_otimo = 0.45
         self.reg = HistGradientBoostingRegressor(
             categorical_features=CAT_COLS, learning_rate=0.05, max_iter=200, max_leaf_nodes=31, random_state=42
@@ -67,9 +68,12 @@ class SettlementEngine:
         y_clf = df_train["target_loss"]
         y_reg = df_train["target_val"]
 
-        # -------------------------------------------------------------
-        # 1. VALIDAÇÃO DO CLASSIFICADOR (HOLD-OUT ESTRATIFICADO 80/20)
-        # -------------------------------------------------------------
+        self.history_stats = df_train.groupby("Sub-assunto", observed=False).agg(
+            qtd_casos=("target_loss", "count"),
+            taxa_derrota=("target_loss", "mean"),
+            valor_medio_condenacao=("target_val", lambda x: x[x > 0].mean() if (x > 0).any() else 0.0)
+        ).to_dict("index")
+
         X_tr, X_val, y_tr, y_val = train_test_split(
             X, y_clf, random_state=42, stratify=y_clf, test_size=0.20
         )
@@ -97,11 +101,9 @@ class SettlementEngine:
 
         self.clf.fit(X, y_clf)
 
-        # 2. Treino do Regressor de Severidade
         mask_condenado = (y_clf == 1)
         self.reg.fit(X[mask_condenado], y_reg[mask_condenado])
 
-        # Otimização do limiar econômico na carteira de treino
         custo_acordo_mercado = df_train["Valor da causa"] * 0.30
         custo_op_dinamico = calcular_custo_operacional_dinamico(df_train)
         custo_status_quo_real = df_train["target_val"] + custo_op_dinamico
@@ -125,9 +127,6 @@ class SettlementEngine:
         ponto_otimo = df_curva.loc[df_curva["custo_total_M"].idxmin()]
         self.limiar_otimo = ponto_otimo["threshold"]
 
-        # -------------------------------------------------------------
-        # DESEMPENHO DO MODELO NO LIMIAR ÓTIMO FINANCEIRO (t* = 45%)
-        # -------------------------------------------------------------
         print("=" * 65)
         print(f"DESEMPENHO DO CLASSIFICADOR NO LIMIAR OTIMO (Corte: {self.limiar_otimo * 100:.1f}%):")
         print("=" * 65)
@@ -160,38 +159,33 @@ class SettlementEngine:
 
         delta = (nivel_slider - 0.50) * 0.30
 
-        # 1. Proposta Inicial: sobe no conservador (+delta) e desce no agressivo (-delta)
         fator_prop_causa = 0.25 * (1.0 + delta)
         fator_prop_teto = 0.60 * (1.0 + delta/2.0)
 
-        # 2. Teto do Acordo: move-se na direção OPOSTA para regular a margem de barganha!
         fator_teto_causa = 0.60 * (1.0 - delta)
         fator_teto_custo = 0.75 * (1.0 - delta)
 
-        # 3. Probabilidades e severidade
         p_loss = self.clf.predict_proba(df_input[FEATURE_COLS])[:, 1]
         pred_severidade = np.maximum(0, self.reg.predict(df_input[FEATURE_COLS]))
 
-        # 4. Custo operacional dinâmico com a base da barra
         custo_operacional = calcular_custo_operacional_dinamico(df_input, base_fixa=350.0)
         custo_esperado_defesa = p_loss * pred_severidade + custo_operacional
 
-        # 5. Teto e Proposta parametrizados continuamente
-        proposta_inicial = np.minimum(
-            df_input["Valor da causa"] * fator_prop_causa,
-            custo_esperado_defesa * fator_teto_custo * fator_prop_teto
-        )
-        
         teto_acordo = np.minimum(
             custo_esperado_defesa * fator_teto_custo,
             df_input["Valor da causa"] * fator_teto_causa
         )
 
-        # 6. Decisão e Risco
+        proposta_inicial = np.minimum(
+            df_input["Valor da causa"] * fator_prop_causa,
+            teto_acordo * fator_prop_teto
+        )
+
         decisoes = []
+        explicacoes = []
         risco = []
         
-        for p in p_loss:
+        for i, p in enumerate(p_loss):
             if p >= 0.80:
                 decisoes.append("Acordo Mandatório")
                 risco.append("alto")
@@ -202,10 +196,45 @@ class SettlementEngine:
                 decisoes.append("Defesa")
                 risco.append("baixo")
 
+            sub_assunto = df_input["Sub-assunto"].iloc[i]
+            stats = self.history_stats.get(sub_assunto, {"qtd_casos": 0, "taxa_derrota": 0.0, "valor_medio_condenacao": 0.0})
+            
+            x_casos = f"{stats['qtd_casos']:,}".replace(",", ".")
+            y_historico = stats["taxa_derrota"] * 100
+            z_valor = stats["valor_medio_condenacao"]
+            w_risco = p * 100
+            w_sucesso = (1 - p) * 100
+            
+            z_formatado = f"{z_valor:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+            adv_exito = "apenas " if w_sucesso < 50 else ""
+            decisao = decisoes[i]
+            
+            prop_ini_val = proposta_inicial.iloc[i] if isinstance(proposta_inicial, pd.Series) else proposta_inicial[i]
+            teto_val = teto_acordo.iloc[i] if isinstance(teto_acordo, pd.Series) else teto_acordo[i]
+            
+            prop_ini_fmt = f"{prop_ini_val:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+            teto_fmt = f"{teto_val:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+            
+            base_expl = (f"Analisando {x_casos} casos similares (categoria: {sub_assunto}), "
+                         f"identificou-se que {y_historico:.1f}% resultam em condenações, com valor médio de "
+                         f"R$ {z_formatado}. Diante de uma taxa de êxito de {adv_exito}{w_sucesso:.1f}% no litígio "
+                         f"(o que representa {w_risco:.1f}% de risco), a recomendação sugerida é o {decisao}.")
+            
+            if decisao == "Defesa":
+                justificativa = (" Como a probabilidade de vitória e o risco financeiro estão equilibrados a nosso favor, "
+                                 "a melhor estratégia é manter a defesa, evitando gastos desnecessários com o pagamento de acordos.")
+            else:
+                justificativa = (f" Para mitigar este passivo, sugere-se iniciar a negociação em R$ {prop_ini_fmt}, "
+                                 f"limitando-se ao teto de R$ {teto_fmt}. Esta estratégia se mostra uma boa abordagem "
+                                 f"pois garante o encerramento da ação por um montante previsível e inferior ao custo médio total esperado caso o litígio prossiga.")
+            
+            explicacoes.append(base_expl + justificativa)
+
         output = df_input[["Número do processo", "Sub-assunto", "UF", "Valor da causa", "qtd_subsidios"]].copy()
         
         output["custo_operacional_estimado"] = np.round(custo_operacional, 2)
         output["decisao_sugerida"] = decisoes
+        output["explicacao_decisao"] = explicacoes
         output["risco"] = risco
         output["valor_sugerido_proposta_inicial"] = np.where(output["decisao_sugerida"] == "Defesa", 0.0, np.round(proposta_inicial, 2))
         output["valor_teto_acordo"] = np.where(output["decisao_sugerida"] == "Defesa", 0.0, np.round(teto_acordo, 2))
