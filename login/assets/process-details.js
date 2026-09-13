@@ -142,13 +142,20 @@
     const body=document.createElement('span');body.textContent=text;node.append(author,body);$('messages').append(node);
     $('messages').scrollTop=$('messages').scrollHeight;return node;
   }
-  // Contrato de integração: substituir este adaptador por chamada ao backend.
-  // O contexto inclui o catálogo completo; uma futura API buscará os PDFs por ID.
   async function requestAssistant({message,context,messages}){
-    await new Promise(resolve=>setTimeout(resolve,450));
-    return {content:`Recebi sua pergunta sobre o processo ${context.processId}. Há ${context.documents.length} documentos locais disponíveis${context.selectedDocument ? ', e você está visualizando '+context.selectedDocument.name : ''}.\n\nEsta resposta é simulada. A integração futura poderá consultar o conteúdo de todos os documentos e o histórico da conversa para responder com evidências. Nenhuma análise jurídica foi realizada.`};
+    // O detalhe é renderizado em um iframe `about:`, sem host próprio.
+    const apiBase = 'http://127.0.0.1:8000';
+    const response = await fetch(`${apiBase}/api/v1/monitoring/process/${encodeURIComponent(context.processId)}/assistant`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({message, history: messages}),
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(payload.detail || 'Não foi possível consultar o assistente.');
+    const sources = (payload.sources || []).length ? `\n\nFontes consultadas: ${payload.sources.join(' · ')}` : '';
+    return {content: `${payload.answer}${sources}`};
   }
-  appendMessage('assistant',`Olá! Este espaço acompanha o processo de ${process.name}. Você pode consultar os documentos e alternar entre as abas mantendo a conversa aberta.\n\nAs respostas desta demonstração são simuladas.`);
+  appendMessage('assistant',`Olá! Posso responder perguntas sobre o processo de ${process.name} com base nos PDFs e no JSON de monitoramento deste caso.`);
   const input=$('message-input');
   input.addEventListener('input',()=>{$('send').disabled=pending||!input.value.trim();});
   input.addEventListener('keydown',event=>{if(event.key==='Enter'&&!event.shiftKey&&!event.isComposing){event.preventDefault();sendMessage();}});
@@ -157,11 +164,11 @@
   async function sendMessage(){
     const message=input.value.trim();if(!message||pending)return;
     history.push({role:'user',content:message});appendMessage('user',message);input.value='';pending=true;$('send').disabled=true;
-    const waiting=appendMessage('assistant','Preparando resposta demonstrativa…');
+    const waiting=appendMessage('assistant','Consultando os documentos e o histórico do processo…');
     try{
-      const context={processId:process.id,party:process.name,documents:process.documents.map(({base64,previews,...doc})=>doc),selectedDocument:currentDocument?{id:currentDocument.id,name:currentDocument.name}:null};
-      const response=await requestAssistant({message,context,messages:[...history]});waiting.remove();history.push({role:'assistant',content:response.content});appendMessage('assistant',response.content);
-    }catch(error){waiting.remove();appendMessage('assistant','Não foi possível responder. Tente enviar a mensagem novamente.');}
+      const context={processId:process.id};
+      const response=await requestAssistant({message,context,messages:history.slice(0,-1)});waiting.remove();history.push({role:'assistant',content:response.content});appendMessage('assistant',response.content);
+    }catch(error){waiting.remove();appendMessage('assistant',error.message || 'Não foi possível responder. Tente enviar a mensagem novamente.');}
     finally{pending=false;$('send').disabled=!input.value.trim();}
   }
   window.addEventListener('pagehide',()=>urls.forEach(url=>URL.revokeObjectURL(url)));

@@ -1,4 +1,7 @@
 from fastapi import APIRouter, HTTPException, Query
+from pydantic import BaseModel, Field
+from typing import Literal
+from src.monitoring.assistant_service import AssistantAnswer, ProcessAssistantService
 from src.monitoring.master_schemas import CaseMasterOverview
 from src.monitoring.orchestrator import CaseOrchestrator
 from src.monitoring.schemas import CaseProgressionResponse
@@ -13,6 +16,17 @@ orchestrator = CaseOrchestrator()
 router = APIRouter(prefix="/api/v1/monitoring", tags=["Monitoring"])
 service = MonitoringService()
 subsidio_service = SubsidioService()
+assistant_service = ProcessAssistantService()
+
+
+class AssistantHistoryItem(BaseModel):
+    role: Literal["user", "assistant"]
+    content: str = Field(min_length=1, max_length=4000)
+
+
+class ProcessAssistantRequest(BaseModel):
+    message: str = Field(min_length=1, max_length=4000)
+    history: list[AssistantHistoryItem] = Field(default_factory=list, max_length=8)
 
 # -----------------------------------------------------------------------------
 # Routes
@@ -70,3 +84,21 @@ def get_process_subsidios(
         return subsidio_service.analyze_process_subsidios(process_id, force_refresh)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao analisar subsídios: {str(e)}")
+
+
+@router.post("/process/{process_id}/assistant", response_model=AssistantAnswer)
+def ask_process_assistant(process_id: str, request: ProcessAssistantRequest):
+    """Answers a question using only the PDFs and monitoring JSON of one process."""
+    try:
+        return assistant_service.answer(
+            process_id=process_id,
+            message=request.message,
+            history=[item.model_dump() for item in request.history],
+        )
+    except (FileNotFoundError, ValueError) as error:
+        raise HTTPException(status_code=404, detail=str(error))
+    except Exception:
+        raise HTTPException(
+            status_code=502,
+            detail="Não foi possível gerar uma resposta para este processo. Tente novamente.",
+        )
