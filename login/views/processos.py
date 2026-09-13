@@ -94,15 +94,30 @@ def render_processos():
             margin-top: 3px;
         }
 
-        .menu-ativo {
-            background: #ffb13318;
+        [data-testid="stSidebar"] .stButton button {
+            color: #c5c9d2;
+            border: 1px solid transparent;
+            background: transparent;
+            justify-content: flex-start;
+            padding: 12px 16px;
+        }
+
+        [data-testid="stSidebar"] .stButton button:hover {
             color: #ffb133;
-            padding: 14px 16px;
-            border: 1px solid #ffb13345;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
+            background: #ffb13312;
+            border-color: #ffb13335;
+        }
+
+        div[class*="st-key-nav_processos"] [data-testid="stButton"] button,
+        div[class*="st-key-nav_historico"] [data-testid="stButton"] button {
+            justify-content: center !important;
+            gap: 10px;
+        }
+
+        div[class*="st-key-nav_processos"] [data-testid="stButton"] button {
+            color: #ffb133;
+            background: #ffb13318;
+            border-color: #ffb13345;
         }
 
         h1 {
@@ -261,13 +276,24 @@ def render_processos():
                 </div>
             </div>
 
-            <div class="menu-ativo">
-                <span>Processos</span>
-                <span>›</span>
-            </div>
             """,
             unsafe_allow_html=True,
         )
+
+        st.button(
+            "Processos",
+            icon=":material/folder_open:",
+            key="nav_processos",
+            use_container_width=True,
+        )
+        if st.button(
+            "Histórico",
+            icon=":material/history:",
+            key="nav_historico",
+            use_container_width=True,
+        ):
+            from views.historico import render_historico
+            st.switch_page(st.Page(render_historico, url_path="historico"))
 
         st.divider()
 
