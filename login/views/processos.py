@@ -110,8 +110,16 @@ def render_processos():
 
         div[class*="st-key-nav_processos"] [data-testid="stButton"] button,
         div[class*="st-key-nav_historico"] [data-testid="stButton"] button {
-            justify-content: center !important;
+            display: flex !important;
+            justify-content: flex-start !important;
             gap: 10px;
+            text-align: left !important;
+        }
+
+        div[class*="st-key-nav_processos"] [data-testid="stButton"] button > div,
+        div[class*="st-key-nav_historico"] [data-testid="stButton"] button > div {
+            flex: 0 0 auto !important;
+            width: auto !important;
         }
 
         div[class*="st-key-nav_processos"] [data-testid="stButton"] button {

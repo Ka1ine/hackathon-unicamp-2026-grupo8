@@ -43,7 +43,12 @@ def _aplicar_estilo():
             border-color: #ffb13335; }
         div[class*="st-key-nav_processos"] [data-testid="stButton"] button,
         div[class*="st-key-nav_historico"] [data-testid="stButton"] button {
-            justify-content: center !important; gap: 10px;
+            display: flex !important; justify-content: flex-start !important; gap: 10px;
+            text-align: left !important;
+        }
+        div[class*="st-key-nav_processos"] [data-testid="stButton"] button > div,
+        div[class*="st-key-nav_historico"] [data-testid="stButton"] button > div {
+            flex: 0 0 auto !important; width: auto !important;
         }
         div[class*="st-key-nav_historico"] [data-testid="stButton"] button {
             color: #ffb133; background: #ffb13318; border-color: #ffb13345;
