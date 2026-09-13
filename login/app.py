@@ -4,6 +4,7 @@ import streamlit as st
 
 from views.processos import render_processos
 from views.detalhes import render_detalhes
+from views.historico import render_historico
 
 authenticated = st.session_state.get("authenticated", False)
 st.set_page_config(page_title="Processos | Enter" if authenticated else "Entrar | Enter",
@@ -14,6 +15,7 @@ st.set_page_config(page_title="Processos | Enter" if authenticated else "Entrar 
 if authenticated:
     page = st.navigation([
         st.Page(render_processos, title="Processos", icon=":material/folder_open:", default=True),
+        st.Page(render_historico, title="Histórico", icon=":material/history:", url_path="historico"),
         st.Page(render_detalhes, title="Detalhes do processo", url_path="processo"),
     ], position="hidden")
     page.run()
