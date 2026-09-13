@@ -42,7 +42,8 @@ def get_case_progression(
 def get_full_case_overview(
     process_id: str, 
     source_path: str = "data/sample_case.html",
-    force_refresh: bool = False
+    force_refresh: bool = False,
+    nivel_slider: float = Query(0.50, description="Nível de conservadorismo da IA (0.0 a 1.0)")
 ):
     """
     Unified endpoint: Returns both the timeline progression and supporting document analysis.
@@ -52,11 +53,11 @@ def get_full_case_overview(
         return orchestrator.get_full_case_overview(
             process_id=process_id, 
             url_or_path=source_path, 
-            force_refresh=force_refresh
+            force_refresh=force_refresh,
+            nivel_slider=nivel_slider
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro no master overview: {str(e)}")
-
 
 @router.get("/process/{process_id}/subsidios", response_model=CompleteSubsidioAnalysis)
 def get_process_subsidios(

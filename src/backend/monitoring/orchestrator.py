@@ -15,7 +15,7 @@ class CaseOrchestrator:
         self.timeline_service = MonitoringService()
         self.policy_service = PolicyService()
 
-    def get_full_case_overview(self, process_id: str, url_or_path: str, force_refresh: bool = False) -> CaseMasterOverview:
+    def get_full_case_overview(self, process_id: str, url_or_path: str, force_refresh: bool = False, nivel_slider: float = 0.50) -> CaseMasterOverview:
         """Retrieves a comprehensive overview of a case, including its timeline and documents."""
         # Initialize the unified overview object
         overview = CaseMasterOverview(process_id=process_id)
@@ -31,15 +31,17 @@ class CaseOrchestrator:
             # 3. Predict Policy Decision
             overview.policy_data = self.policy_service.evaluate_case(
                 force_refresh=force_refresh, 
-                process_id=process_id
+                process_id=process_id,
+                nivel_slider=nivel_slider
             )
 
             # 4. Save the master overview inside the specific case folder
             process_dir = Path(f"data/example_cases/{process_id}")
             process_dir.mkdir(parents=True, exist_ok=True)
             
-            # Change name from _master.json to just _{process_id}.json
-            master_cache_path = process_dir / f"_{process_id}.json"
+            # Incorporamos o valor do slider no cache master também, para não sobrescrever decisões diferentes 
+            slider_str = str(nivel_slider).replace('.', '')
+            master_cache_path = process_dir / f"_{process_id}_{slider_str}.json"
             
             # Convert to dictionary to remove redundant IDs before saving
             output_dict = overview.model_dump(exclude_none=True)

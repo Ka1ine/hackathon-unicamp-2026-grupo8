@@ -106,6 +106,33 @@ def render_configuracoes():
         st.caption("As alterações são aplicadas automaticamente em todas as telas.")
 
     with st.container(border=True):
+        st.subheader("Política de Acordos (Machine Learning)")
+        st.write(
+            "Ajuste o comportamento do motor de decisão. Valores menores tornam o modelo mais **agressivo** (favorecendo a manutenção da defesa e o litígio), "
+            "enquanto valores maiores tornam o modelo mais **conservador** (favorecendo a propositura de acordos para mitigar riscos)."
+        )
+
+        nivel_slider = st.slider(
+            "Nível de Conservadorismo",
+            min_value=0.0,
+            max_value=1.0,
+            value=st.session_state.get("nivel_slider", 0.50),
+            step=0.05,
+            help="0.0 = Máxima Agressividade | 0.5 = Balanceado | 1.0 = Máximo Conservadorismo"
+        )
+
+        if nivel_slider < 0.35:
+            st.info("🛡️ **Estratégia Agressiva:** O modelo focará em teses de defesa fortes e só proporá acordos em casos de risco extremo.")
+        elif nivel_slider > 0.65:
+            st.warning("🤝 **Estratégia Conservadora:** O modelo priorizará o encerramento rápido dos litígios via acordos para evitar surpresas judiciais.")
+        else:
+            st.success("⚖️ **Estratégia Balanceada:** O modelo atuará conforme os limiares ótimos de mercado e histórico (Padrão).")
+
+        if st.button("Salvar Preferências de IA"):
+            st.session_state["nivel_slider"] = nivel_slider
+            st.toast("✅ Preferências de Machine Learning atualizadas com sucesso!")
+
+    with st.container(border=True):
         st.subheader("Base de dados")
         dados, erros = carregar_historico()
         if erros:

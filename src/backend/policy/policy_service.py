@@ -33,12 +33,14 @@ class PolicyService:
             print(f"[ERROR] Base de treino não encontrada em {train_path}")
             self._engine = None
 
-    def evaluate_case(self, process_id: str, force_refresh: bool = False) -> PolicyDecision:
+    def evaluate_case(self, process_id: str, force_refresh: bool = False, nivel_slider: float = 0.50) -> PolicyDecision:
         """Evaluates a single case and caches the decision in a JSON file."""
         cache_dir = self.base_data_dir / "cache"
         cache_dir.mkdir(exist_ok=True, parents=True)
         
-        json_file_path = cache_dir / f"{process_id}_policy.json"
+        # Incorpora o valor do slider no nome do cache para refletir a variação
+        slider_str = str(nivel_slider).replace('.', '')
+        json_file_path = cache_dir / f"{process_id}_policy_{slider_str}.json"
         process_dir = self.base_data_dir / "example_cases" / process_id
 
         # 1. Check Cache
@@ -57,8 +59,8 @@ class PolicyService:
         features_dict = parse_case_folder(str(process_dir))
         df_cases = pd.DataFrame([features_dict])
         
-        # Run prediction for this single row
-        result_df = self._engine.predict(df_cases)
+        # Repassa o nivel_slider para o método predict do modelo base
+        result_df = self._engine.predict(df_cases, nivel_slider=nivel_slider)
         row = result_df.iloc[0]
 
         policy_decision = PolicyDecision(
