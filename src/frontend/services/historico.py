@@ -5,7 +5,7 @@ import pandas as pd
 import streamlit as st
 
 
-RAIZ = Path(__file__).resolve().parents[2]
+RAIZ = Path(__file__).resolve().parents[3]
 ARQUIVO_DADOS = RAIZ / "data" / "Hackaton_Enter_Base_Candidatos.xlsx"
 
 

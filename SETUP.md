@@ -33,7 +33,7 @@ pip install -r requirements.txt
 A plataforma utiliza os PDFs reais alocados nas pastas `data/0801234-56-2024-8-10-0001` e `data/0654321-09-2024-8-04-0001`. Para gerar a visualização paginada (imagens) na tela de Detalhes do Processo, execute o script de pré-renderização:
 
 ```bash
-python login/services/gerar_previas.py
+python src/frontend/services/gerar_previas.py
 ```
 
 *(Nota: As imagens geradas serão salvas em cache na pasta `.previews` junto aos originais, associadas por um hash para garantir a integridade em caso de alteração no documento. O PDF original nunca é alterado).*
@@ -43,7 +43,7 @@ python login/services/gerar_previas.py
 A interface de usuário e demonstração é baseada em Streamlit. Inicie o servidor frontend executando:
 
 ```bash
-python -m streamlit run app.py
+python -m streamlit run src/frontend/app.py
 ```
 
 Acesse `http://localhost:8501` se o navegador não abrir automaticamente.
@@ -62,7 +62,7 @@ A suíte de testes foi migrada para o `unittest` nativo do Python, garantindo co
 Para rodar a bateria de testes:
 
 ```bash
-python -m unittest discover -s login/tests
+python -m unittest discover -s src/frontend/tests
 ```
 
 ## Estrutura do Projeto Atualizada

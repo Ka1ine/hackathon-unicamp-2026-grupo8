@@ -9,7 +9,7 @@ Abra o terminal dentro da pasta extraída `enter-login` e execute:
 
 ```bash
 python3 -m pip install -r requirements.txt
-python3 -m streamlit run app.py
+python3 -m streamlit run src/frontend/app.py
 ```
 
 Acesse http://localhost:8501 se o navegador não abrir automaticamente.

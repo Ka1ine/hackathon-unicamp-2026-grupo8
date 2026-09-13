@@ -25,7 +25,7 @@ O hash impede uma imagem antiga de ser associada a um documento alterado.
 Para gerar/atualizar imagens, execute na raiz:
 
 ```sh
-python login/services/gerar_previas.py
+python src/frontend/services/gerar_previas.py
 ```
 
 Somente esse comando de preparação requer o executável `pdftoppm` do Poppler
@@ -51,7 +51,7 @@ chaves de LLM no navegador. Nesta etapa os PDFs não são enviados a serviços.
 ## Verificação
 
 ```sh
-python -m unittest discover -s login/tests
+python -m unittest discover -s src/frontend/tests
 ```
 
 Os testes originais cobrem login, busca com/sem acento, número sem pontuação,

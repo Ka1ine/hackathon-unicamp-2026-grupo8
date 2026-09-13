@@ -9,7 +9,7 @@ def gerar_previas():
     if not renderer:
         raise SystemExit("pdftoppm não encontrado. Instale Poppler para gerar prévias visuais; o download e a prévia textual continuam disponíveis.")
     
-    data_dir = Path(__file__).resolve().parents[2] / "data" / "example_cases"
+    data_dir = Path(__file__).resolve().parents[3] / "data" / "example_cases"
     total = 0
     
     if not data_dir.exists():

@@ -5,7 +5,7 @@ import re
 from pypdf import PdfReader
 import streamlit as st
 
-RAIZ = Path(__file__).resolve().parents[2]
+RAIZ = Path(__file__).resolve().parents[3]
 PASTA_DADOS = RAIZ / "data" / "example_cases"
 
 def extrair_processo(caminho):
