@@ -185,7 +185,7 @@ class SettlementEngine:
         pred_severidade = np.maximum(0, self.reg.predict(df_input[FEATURE_COLS]))
 
         # 2. Custo operacional dinâmico com a base da barra
-        custo_operacional = calcular_custo_operacional_dinamico(df_input, base_fixa=base_fixa_dinamica)
+        custo_operacional = calcular_custo_operacional_dinamico(df_input, base_fixa=350.0)
         custo_esperado_defesa = p_loss * pred_severidade + custo_operacional
 
         # 3. Teto e Proposta parametrizados continuamente

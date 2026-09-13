@@ -1,8 +1,10 @@
 import traceback
 
+from pathlib import Path
 from src.monitoring.master_schemas import CaseMasterOverview, ProcessingStatus
 from src.monitoring.service import MonitoringService
 from src.monitoring.subsidio_service import SubsidioService
+from src.policy.policy_service import PolicyService
 
 class CaseOrchestrator:
     """Coordinates the retrieval and merging of case timelines and supporting documents."""
@@ -11,6 +13,7 @@ class CaseOrchestrator:
         """Initializes the services required for orchestrating case data."""
         self.subsidio_service = SubsidioService()
         self.timeline_service = MonitoringService()
+        self.policy_service = PolicyService()
 
     def get_full_case_overview(self, process_id: str, url_or_path: str, force_refresh: bool = False) -> CaseMasterOverview:
         """Retrieves a comprehensive overview of a case, including its timeline and documents."""
@@ -30,8 +33,22 @@ class CaseOrchestrator:
                 process_id=process_id, 
                 url=url_or_path
             )
+
+            # 3. Predict Policy Decision
+            overview.policy_data = self.policy_service.evaluate_case(
+                force_refresh=force_refresh, 
+                process_id=process_id
+            )
+
+            # 4. Save the master overview inside the specific case folder
+            process_dir = Path(f"data/example_cases/{process_id}")
+            process_dir.mkdir(parents=True, exist_ok=True)
             
-            # Mark as completed if both operations succeed
+            master_cache_path = process_dir / f"_{process_id}_master.json"
+            with open(master_cache_path, "w", encoding="utf-8") as f:
+                f.write(overview.model_dump_json(indent=4))
+
+            # Mark as completed if all operations succeed
             overview.status = ProcessingStatus.COMPLETED
 
         except Exception as e:

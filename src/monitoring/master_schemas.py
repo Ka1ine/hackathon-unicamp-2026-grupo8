@@ -2,6 +2,7 @@ from enum import Enum
 from pydantic import BaseModel, Field
 from src.monitoring.schemas import CaseProgressionResponse
 from src.monitoring.subsidio_schemas import CompleteSubsidioAnalysis
+from src.policy.policy_schemas import PolicyDecision
 from typing import Optional
 
 class ProcessingStatus(str, Enum):
@@ -15,5 +16,6 @@ class CaseMasterOverview(BaseModel):
     error_message: Optional[str] = None
     process_id: str = Field(...)
     status: ProcessingStatus = ProcessingStatus.COMPLETED
+    policy_data: Optional[PolicyDecision] = None
     subsidios_data: Optional[CompleteSubsidioAnalysis] = None
     timeline_data: Optional[CaseProgressionResponse] = None

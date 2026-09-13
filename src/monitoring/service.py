@@ -10,7 +10,7 @@ from src.utils.pdf_utils import extract_text_from_file
 class MonitoringService:
     """Handles the retrieval, updating, and caching of case progression data."""
 
-    def __init__(self, base_data_dir: Path = Path("data/processos_exemplo")):
+    def __init__(self, base_data_dir: Path = Path("data/example_cases")):
         self.base_data_dir = base_data_dir
         self.extractor = CaseProgressionExtractor()
         self.scraper = PublicCaseScraper()
@@ -21,7 +21,7 @@ class MonitoringService:
         url: str = None, 
         force_refresh: bool = False, 
         parse_local_autos: bool = True,
-        demo: bool = True
+        demo: bool = False
     ) -> CaseProgressionResponse:
         process_dir = self.base_data_dir / process_id
         process_dir.mkdir(exist_ok=True, parents=True) 
@@ -67,10 +67,11 @@ class MonitoringService:
 
         # 2. Process Local File Autos Data (Tagged as "file")
         if parse_local_autos:
-            print(f"[DEBUG] Searching for local 'Autos' files in {process_dir}...")
+            print(f"[DEBUG] Searching for local files in {process_dir}...")
             local_text = ""
             for target_file in process_dir.glob("*.pdf"):
-                if "autos" in target_file.name.lower() or "processo" in target_file.name.lower():
+                name_lower = target_file.name.lower()
+                if "autos" in name_lower or "processo" in name_lower or "case" in name_lower:
                     print(f"[DEBUG] Extracting text from local file: {target_file.name}")
                     extracted_pdf_text = extract_text_from_file(target_file)
                     if extracted_pdf_text:
