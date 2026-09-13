@@ -111,6 +111,7 @@ def render_processos():
 
         div[class*="st-key-nav_processos"] [data-testid="stButton"] button,
         div[class*="st-key-nav_historico"] [data-testid="stButton"] button,
+        div[class*="st-key-nav_transparencia"] [data-testid="stButton"] button,
         div[class*="st-key-nav_configuracoes"] [data-testid="stButton"] button {
             display: flex !important;
             justify-content: flex-start !important;
@@ -120,6 +121,7 @@ def render_processos():
 
         div[class*="st-key-nav_processos"] [data-testid="stButton"] button > div,
         div[class*="st-key-nav_historico"] [data-testid="stButton"] button > div,
+        div[class*="st-key-nav_transparencia"] [data-testid="stButton"] button > div,
         div[class*="st-key-nav_configuracoes"] [data-testid="stButton"] button > div {
             flex: 0 0 auto !important;
             width: auto !important;
@@ -307,6 +309,14 @@ def render_processos():
         ):
             from views.historico import render_historico
             st.switch_page(st.Page(render_historico, url_path="historico"))
+        if st.button(
+            "Transparência",
+            icon=":material/visibility:",
+            key="nav_transparencia",
+            use_container_width=True,
+        ):
+            from views.transparencia import render_transparencia
+            st.switch_page(st.Page(render_transparencia, url_path="transparencia"))
         if st.button(
             "Configurações",
             icon=":material/settings:",

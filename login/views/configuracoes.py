@@ -29,11 +29,13 @@ def _estilo():
         [data-testid="stSidebar"] .stButton button:hover { color:#ffb133; background:#ffb13312; border-color:#ffb13335; }
         div[class*="st-key-nav_processos"] [data-testid="stButton"] button,
         div[class*="st-key-nav_historico"] [data-testid="stButton"] button,
+        div[class*="st-key-nav_transparencia"] [data-testid="stButton"] button,
         div[class*="st-key-nav_configuracoes"] [data-testid="stButton"] button {
             display:flex !important; justify-content:flex-start !important; gap:10px; text-align:left !important;
         }
         div[class*="st-key-nav_processos"] [data-testid="stButton"] button > div,
         div[class*="st-key-nav_historico"] [data-testid="stButton"] button > div,
+        div[class*="st-key-nav_transparencia"] [data-testid="stButton"] button > div,
         div[class*="st-key-nav_configuracoes"] [data-testid="stButton"] button > div {
             flex:0 0 auto !important; width:auto !important;
         }
@@ -69,6 +71,9 @@ def _sidebar():
         if st.button("Histórico", icon=":material/history:", key="nav_historico", use_container_width=True):
             from views.historico import render_historico
             st.switch_page(st.Page(render_historico, url_path="historico"))
+        if st.button("Transparência", icon=":material/visibility:", key="nav_transparencia", use_container_width=True):
+            from views.transparencia import render_transparencia
+            st.switch_page(st.Page(render_transparencia, url_path="transparencia"))
         st.button("Configurações", icon=":material/settings:", key="nav_configuracoes", use_container_width=True)
         st.divider()
         if st.button("Sair da conta", use_container_width=True):

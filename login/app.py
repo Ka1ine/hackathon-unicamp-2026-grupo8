@@ -5,6 +5,7 @@ import streamlit as st
 from views.processos import render_processos
 from views.detalhes import render_detalhes
 from views.historico import render_historico
+from views.transparencia import render_transparencia
 from views.configuracoes import render_configuracoes
 
 authenticated = st.session_state.get("authenticated", False)
@@ -17,6 +18,7 @@ if authenticated:
     page = st.navigation([
         st.Page(render_processos, title="Processos", icon=":material/folder_open:", default=True),
         st.Page(render_historico, title="Histórico", icon=":material/history:", url_path="historico"),
+        st.Page(render_transparencia, title="Transparência", icon=":material/visibility:", url_path="transparencia"),
         st.Page(render_configuracoes, title="Configurações", icon=":material/settings:", url_path="configuracoes"),
         st.Page(render_detalhes, title="Detalhes do processo", url_path="processo"),
     ], position="hidden")
