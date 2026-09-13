@@ -1,0 +1,109 @@
+(() => {
+  'use strict';
+  const process = JSON.parse(document.getElementById('case-data').textContent);
+  const $ = id => document.getElementById(id);
+  const money = value => new Intl.NumberFormat('pt-BR', {style:'currency',currency:'BRL'}).format(value);
+  let currentDocument = null, page = 1, chatOpen = false, pending = false;
+  const urls = new Map();
+  const history = [];
+  $('party').textContent = process.name;
+  $('number').textContent = process.id;
+  $('status').textContent = process.status;
+  $('chat-number').textContent = process.id;
+  $('doc-count').textContent = process.documents.length;
+  for (const [label, value] of [['Instituição',process.bank],['Vara / tribunal',process.court],['Valor da causa',money(process.amount)],['Valor do empréstimo',process.loan],['Valor da parcela',process.installment]]) {
+    const group = document.createElement('div'), dt = document.createElement('dt'), dd = document.createElement('dd');
+    dt.textContent = label; dd.textContent = value; group.append(dt,dd); $('metadata').append(group);
+  }
+  function setTab(tab, focus=false) {
+    document.querySelectorAll('[role=tab]').forEach(button => {
+      const selected = button.dataset.tab === tab;
+      button.setAttribute('aria-selected', String(selected)); button.tabIndex = selected ? 0 : -1;
+      $('panel-'+button.dataset.tab).hidden = !selected;
+      if (selected && focus) button.focus();
+    });
+  }
+  const tabs = [...document.querySelectorAll('[role=tab]')];
+  tabs.forEach((button,index) => {
+    button.addEventListener('click',() => setTab(button.dataset.tab));
+    button.addEventListener('keydown',event => {
+      let next;
+      if(event.key==='ArrowRight') next=(index+1)%tabs.length;
+      if(event.key==='ArrowLeft') next=(index+tabs.length-1)%tabs.length;
+      if(event.key==='Home') next=0;
+      if(event.key==='End') next=tabs.length-1;
+      if(next!==undefined){event.preventDefault();setTab(tabs[next].dataset.tab,true);}
+    });
+  });
+  function documentUrl(doc) {
+    if(!urls.has(doc.id)) {
+      const bytes = Uint8Array.from(atob(doc.base64), c => c.charCodeAt(0));
+      urls.set(doc.id, URL.createObjectURL(new Blob([bytes],{type:'application/pdf'})));
+    }
+    return urls.get(doc.id);
+  }
+  function renderPage() {
+    if(!currentDocument) return;
+    $('page-label').textContent=`Página ${page} de ${currentDocument.pages}`;
+    $('previous').disabled=page<=1; $('next').disabled=page>=currentDocument.pages;
+    const preview=currentDocument.previews[page-1];
+    const node=document.createElement(preview.image?'img':'pre');
+    if(preview.image){node.src='data:image/png;base64,'+preview.image;node.alt=`${currentDocument.name} — página ${page}`;node.className='pdf-page';}
+    else{node.textContent='Prévia textual · Imagem não gerada\n\n'+preview.text;node.className='pdf-text';}
+    $('pdf-container').replaceChildren(node);$('pdf-container').scrollTop=0;
+  }
+  function selectDocument(doc) {
+    currentDocument=doc;page=1;
+    document.querySelectorAll('.document-item').forEach(button => button.setAttribute('aria-pressed',String(button.dataset.id===doc.id)));
+    $('document-name').textContent=doc.name;
+    $('document-size').textContent=`PDF · ${Math.ceil(doc.bytes/1024)} KB · ${doc.pages} página(s)`;
+    $('download').hidden=false; $('download').href=documentUrl(doc);$('download').download=doc.filename;
+    renderPage();
+  }
+  for(const doc of process.documents){
+    const button=document.createElement('button');button.className='document-item';button.dataset.id=doc.id;button.setAttribute('aria-pressed','false');
+    const icon=document.createElement('span');icon.className='file-symbol';icon.textContent='PDF';icon.setAttribute('aria-hidden','true');
+    const label=document.createElement('span');label.textContent=doc.name;
+    const sub=document.createElement('small');sub.textContent=`${doc.pages} página(s)`;label.append(sub);button.append(icon,label);
+    button.addEventListener('click',()=>selectDocument(doc));$('document-list').append(button);
+  }
+  $('previous').addEventListener('click',()=>{if(page>1){page--;renderPage();}});
+  $('next').addEventListener('click',()=>{if(currentDocument&&page<currentDocument.pages){page++;renderPage();}});
+  $('previous').disabled=true;$('next').disabled=true;
+  if(process.documents.length)selectDocument(process.documents[0]);
+  function setChat(open){
+    chatOpen=open;$('chat-panel').hidden=!open;$('workspace').classList.toggle('chat-open',open);
+    $('chat-toggle').setAttribute('aria-expanded',String(open));$('chat-toggle').textContent=open?'✦ Recolher assistente':'✦ Abrir assistente';
+    if(open)$('message-input').focus({preventScroll:true});else $('chat-toggle').focus({preventScroll:true});
+  }
+  $('chat-toggle').addEventListener('click',()=>setChat(!chatOpen));$('chat-close').addEventListener('click',()=>setChat(false));
+  function appendMessage(role,text){
+    const node=document.createElement('div');node.className='message '+role;
+    const author=document.createElement('strong');author.textContent=role==='user'?'VOCÊ':'ASSISTENTE · DEMONSTRAÇÃO';
+    const body=document.createElement('span');body.textContent=text;node.append(author,body);$('messages').append(node);
+    $('messages').scrollTop=$('messages').scrollHeight;return node;
+  }
+  // Contrato de integração: substituir este adaptador por chamada ao backend.
+  // O contexto inclui o catálogo completo; uma futura API buscará os PDFs por ID.
+  async function requestAssistant({message,context,messages}){
+    await new Promise(resolve=>setTimeout(resolve,450));
+    return {content:`Recebi sua pergunta sobre o processo ${context.processId}. Há ${context.documents.length} documentos locais disponíveis${context.selectedDocument ? ', e você está visualizando '+context.selectedDocument.name : ''}.\n\nEsta resposta é simulada. A integração futura poderá consultar o conteúdo de todos os documentos e o histórico da conversa para responder com evidências. Nenhuma análise jurídica foi realizada.`};
+  }
+  appendMessage('assistant',`Olá! Este espaço acompanha o processo de ${process.name}. Você pode consultar os documentos e alternar entre as abas mantendo a conversa aberta.\n\nAs respostas desta demonstração são simuladas.`);
+  const input=$('message-input');
+  input.addEventListener('input',()=>{$('send').disabled=pending||!input.value.trim();});
+  input.addEventListener('keydown',event=>{if(event.key==='Enter'&&!event.shiftKey&&!event.isComposing){event.preventDefault();sendMessage();}});
+  $('chat-form').addEventListener('submit',event=>event.preventDefault());
+  $('send').addEventListener('click',sendMessage);
+  async function sendMessage(){
+    const message=input.value.trim();if(!message||pending)return;
+    history.push({role:'user',content:message});appendMessage('user',message);input.value='';pending=true;$('send').disabled=true;
+    const waiting=appendMessage('assistant','Preparando resposta demonstrativa…');
+    try{
+      const context={processId:process.id,party:process.name,documents:process.documents.map(({base64,previews,...doc})=>doc),selectedDocument:currentDocument?{id:currentDocument.id,name:currentDocument.name}:null};
+      const response=await requestAssistant({message,context,messages:[...history]});waiting.remove();history.push({role:'assistant',content:response.content});appendMessage('assistant',response.content);
+    }catch(error){waiting.remove();appendMessage('assistant','Não foi possível responder. Tente enviar a mensagem novamente.');}
+    finally{pending=false;$('send').disabled=!input.value.trim();}
+  }
+  window.addEventListener('pagehide',()=>urls.forEach(url=>URL.revokeObjectURL(url)));
+})();
