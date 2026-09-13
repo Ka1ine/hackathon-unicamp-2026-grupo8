@@ -34,9 +34,11 @@ class PolicyService:
     def evaluate_case(self, process_id: str, force_refresh: bool = False) -> PolicyDecision:
         """Evaluates a single case and caches the decision in a JSON file."""
         process_dir = self.base_data_dir / "example_cases" / process_id
-        cache_dir = self.base_data_dir / "monitoring_cache"
         
+        # Change "monitoring_cache" to "cache"
+        cache_dir = self.base_data_dir / "cache"
         cache_dir.mkdir(exist_ok=True, parents=True)
+        
         json_file_path = cache_dir / f"{process_id}_policy.json"
 
         # 1. Check Cache

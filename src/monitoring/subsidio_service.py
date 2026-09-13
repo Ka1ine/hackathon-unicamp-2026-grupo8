@@ -21,7 +21,7 @@ class SubsidioService:
     """Service responsible for loading, parsing, and caching supporting legal documents."""
 
     # Updated to match the actual folder name in the file tree
-    def __init__(self, base_data_dir: Path = Path("data/processos_exemplo"), cache_dir: Path = Path("data/monitoramento_cache")):
+    def __init__(self, base_data_dir: Path = Path("data/processos_exemplo"), cache_dir: Path = Path("data/cache")):
         self.base_data_dir = base_data_dir
         self.cache_dir = cache_dir
         self.cache_dir.mkdir(exist_ok=True, parents=True)

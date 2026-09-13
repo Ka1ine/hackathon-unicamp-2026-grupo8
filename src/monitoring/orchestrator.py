@@ -1,3 +1,4 @@
+import json
 import traceback
 
 from pathlib import Path
@@ -44,9 +45,18 @@ class CaseOrchestrator:
             process_dir = Path(f"data/example_cases/{process_id}")
             process_dir.mkdir(parents=True, exist_ok=True)
             
-            master_cache_path = process_dir / f"_{process_id}_master.json"
+            # Change name from _master.json to just _{process_id}.json
+            master_cache_path = process_dir / f"_{process_id}.json"
+            
+            # Convert to dictionary to remove redundant IDs before saving
+            output_dict = overview.model_dump()
+            if output_dict.get("subsidios_data") and "process_id" in output_dict["subsidios_data"]:
+                del output_dict["subsidios_data"]["process_id"]
+            if output_dict.get("timeline_data") and "process_id" in output_dict["timeline_data"]:
+                del output_dict["timeline_data"]["process_id"]
+
             with open(master_cache_path, "w", encoding="utf-8") as f:
-                f.write(overview.model_dump_json(indent=4))
+                json.dump(output_dict, f, indent=4, ensure_ascii=False)
 
             # Mark as completed if all operations succeed
             overview.status = ProcessingStatus.COMPLETED

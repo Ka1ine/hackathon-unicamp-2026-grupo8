@@ -26,7 +26,11 @@ class MonitoringService:
         process_dir = self.base_data_dir / process_id
         process_dir.mkdir(exist_ok=True, parents=True) 
         
-        json_file_path = process_dir / f"_{process_id}.json"
+        # Change this to save timeline cache in the new "cache" folder
+        cache_dir = self.base_data_dir.parent / "cache"
+        cache_dir.mkdir(exist_ok=True, parents=True)
+        json_file_path = cache_dir / f"_{process_id}_timeline.json"
+        
         existing_data = None
 
         if json_file_path.exists():
