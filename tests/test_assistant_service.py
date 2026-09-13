@@ -3,7 +3,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from src.monitoring.assistant_service import ProcessAssistantService
+from src.backend.monitoring.assistant_service import ProcessAssistantService
 
 
 def test_build_context_uses_only_the_requested_case():

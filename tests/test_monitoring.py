@@ -3,8 +3,9 @@ from pathlib import Path
 import pytest
 from dotenv import load_dotenv
 
-from src.monitoring.service import MonitoringService
-from src.monitoring.subsidio_service import SubsidioService
+from src.backend.monitoring.service import MonitoringService
+from src.backend.monitoring.schemas import CaseProgressionResponse, TimelineEvent
+from src.backend.monitoring.subsidio_service import SubsidioService
 
 # Ensure environment variables (like OPENAI_API_KEY) are loaded for the tests
 load_dotenv()
@@ -40,15 +41,9 @@ def mock_subsidios_env(tmp_path):
     process_dir.mkdir(exist_ok=True, parents=True)
     
     # Write mock document files for extraction testing
-    (process_dir / "contrato_aditivo.txt").write_text(
-        "Aditivo ao Contrato nº 111. Novo valor total: R$ 50.000,00. Taxa: 1.8% ao mês. Assinado em 2024-05-10."
-    )
-    (process_dir / "contrato_original.txt").write_text(
-        "Contrato nº 111. Valor total: R$ 40.000,00. Taxa de juros: 1.5% ao mês. Assinado em 2023-01-10."
-    )
-    (process_dir / "demonstrativo_divida_v1.txt").write_text(
-        "Demonstrativo de Dívida. Valor Principal: R$ 50.000,00. Total Atualizado: R$ 52.000,00 em 2026-01-15."
-    )
+    (process_dir / "contrato_aditivo.pdf").write_bytes(b"pdf simulado")
+    (process_dir / "contrato_original.pdf").write_bytes(b"pdf simulado")
+    (process_dir / "demonstrativo_divida_v1.pdf").write_bytes(b"pdf simulado")
     
     return base_dir, cache_dir, process_id
 
@@ -60,7 +55,24 @@ def mock_subsidios_env(tmp_path):
 def test_monitoring_service(mock_html_file, tmp_path):
     """Validates the scraping, extraction, and timeline generation for a case."""
     process_id = "test_scrape"
-    service = MonitoringService(cache_dir=tmp_path)
+    service = MonitoringService(base_data_dir=tmp_path / "cases")
+
+    class ExtractorSimulado:
+        def extract_progression(self, received_process_id, _text):
+            return CaseProgressionResponse(
+                process_id=received_process_id,
+                current_stage="Citação",
+                next_recommended_action="Protocolar Petição/Manifestação",
+                timeline=[TimelineEvent(
+                    action_required="Protocolar Petição/Manifestação",
+                    date="2026-01-15",
+                    stage="Citação",
+                    summary="Intimação expedida para manifestação.",
+                    title="Intimação",
+                )],
+            )
+
+    service.extractor = ExtractorSimulado()
     
     # Execute the service logic against the mock HTML file
     result = service.get_or_update_case(process_id, mock_html_file, force_refresh=True)
@@ -71,10 +83,24 @@ def test_monitoring_service(mock_html_file, tmp_path):
     assert len(result.timeline) > 0, "Deveria haver pelo menos um evento extraído na timeline."
 
 
-def test_subsidio_service(mock_subsidios_env):
+def test_subsidio_service(mock_subsidios_env, monkeypatch):
     """Validates the bulk processing and extraction of legal supporting documents."""
     base_dir, cache_dir, process_id = mock_subsidios_env
     service = SubsidioService(base_data_dir=base_dir, cache_dir=cache_dir)
+
+    class ExtractorSimulado:
+        def parse_document(self, doc_type, _text):
+            if doc_type == "contrato":
+                return {"contrato_numero": "111", "valor_total": 40000.0}
+            if doc_type == "demonstrativo_divida":
+                return {"valor_principal": 50000.0, "valor_total_atualizado": 52000.0}
+            return None
+
+    service.extractor = ExtractorSimulado()
+    monkeypatch.setattr(
+        "src.backend.monitoring.subsidio_service.extract_text_from_file",
+        lambda _file: "conteúdo de PDF simulado",
+    )
     
     # Execute the analysis workflow
     result = service.analyze_process_subsidios(process_id, force_refresh=True)
