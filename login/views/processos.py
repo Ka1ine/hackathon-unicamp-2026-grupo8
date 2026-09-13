@@ -362,9 +362,9 @@ def render_processos():
                 "Recomendação",
                 [
                     "Todas",
-                    "Propor acordo",
-                    "Manter defesa",
-                    "Revisar documentos",
+                    "Acordo Mandatório",
+                    "Acordo Estratégico",
+                    "Defesa",
                     "A avaliar",
                 ],
                 key="filtro_recomendacao",

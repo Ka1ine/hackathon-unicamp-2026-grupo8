@@ -10,16 +10,15 @@
   </header>
   <div class="workspace-toolbar">
     <div role="tablist" aria-label="Seções do processo" class="tabs">
-      <button role="tab" id="tab-analysis" aria-controls="panel-analysis" aria-selected="false" tabindex="-1" data-tab="analysis">Análise</button>
-      <button role="tab" id="tab-documents" aria-controls="panel-documents" aria-selected="true" data-tab="documents">Documentos <span id="doc-count"></span></button>
-      <button role="tab" id="tab-agreement" aria-controls="panel-agreement" aria-selected="false" tabindex="-1" data-tab="agreement">Acordo</button>
+      <button role="tab" id="tab-analysis" aria-controls="panel-analysis" aria-selected="true" data-tab="analysis">Análise do Caso</button>
+      <button role="tab" id="tab-documents" aria-controls="panel-documents" aria-selected="false" tabindex="-1" data-tab="documents">Documentos <span id="doc-count"></span></button>
       <button role="tab" id="tab-timeline" aria-controls="panel-timeline" aria-selected="false" tabindex="-1" data-tab="timeline">Linha do tempo <span id="timeline-count"></span></button>
     </div>
     <button id="chat-toggle" class="primary" aria-expanded="false" aria-controls="chat-panel">✦ Abrir assistente</button>
   </div>
   <div id="workspace" class="workspace">
     <section class="main-panel">
-      <section id="panel-documents" role="tabpanel" aria-labelledby="tab-documents">
+      <section id="panel-documents" role="tabpanel" aria-labelledby="tab-documents" hidden>
         <div class="documents-layout">
           <aside class="document-sidebar"><div class="list-title">ARQUIVOS DO PROCESSO</div><div id="document-list" aria-label="Documentos disponíveis"></div></aside>
           <section class="viewer" aria-label="Visualização do documento">
@@ -30,8 +29,20 @@
           </section>
         </div>
       </section>
-      <section id="panel-analysis" role="tabpanel" aria-labelledby="tab-analysis" hidden><div class="placeholder"><span class="placeholder-icon">◎</span><h2>Análise em desenvolvimento</h2><p>A avaliação das evidências e a recomendação jurídica estarão disponíveis aqui.</p><span class="status">Em breve</span></div></section>
-      <section id="panel-agreement" role="tabpanel" aria-labelledby="tab-agreement" hidden><div class="placeholder"><span class="placeholder-icon">◇</span><h2>Acordo em desenvolvimento</h2><p>Este espaço será destinado à proposta e ao acompanhamento da negociação.</p><span class="status">Em breve</span></div></section>
+      <section id="panel-analysis" role="tabpanel" aria-labelledby="tab-analysis">
+        <div class="analysis-panel">
+          <header class="analysis-heading"><span class="ai-symbol" aria-hidden="true">✦</span><div><p class="ai-title">Análise estratégica da IA</p><p>Leitura consolidada do perfil e da política de acordos deste processo</p></div></header>
+          <div class="analysis-body">
+            <aside class="author-section"><div class="section-heading"><span class="section-label">PERFIL DO AUTOR</span><h2>Dados declarados nos autos</h2></div><dl id="author-profile" class="author-profile"></dl></aside>
+            <section class="decision-section">
+              <div id="strategy-card" class="strategy-card"><div class="strategy-main"><span class="section-label">INDICAÇÃO DE SOLUÇÃO</span><h2 id="strategy-action"></h2><p id="strategy-kind"></p></div><span id="strategy-risk" class="risk-badge"></span></div>
+              <div id="strategy-metrics" class="strategy-metrics"></div>
+              <div class="explanation-card"><span class="section-label">FUNDAMENTAÇÃO DA ESTRATÉGIA</span><p id="strategy-explanation"></p></div>
+              <p class="policy-source">Fonte da decisão: política de acordos registrada no JSON consolidado do processo.</p>
+            </section>
+          </div>
+        </div>
+      </section>
       <section id="panel-timeline" role="tabpanel" aria-labelledby="tab-timeline" hidden>
         <div class="timeline-panel">
           <header class="timeline-header"><div><p class="eyebrow">ANDAMENTO PROCESSUAL</p><h2>Linha do tempo</h2><p class="timeline-description">Eventos extraídos dos autos, do mais recente para o mais antigo.</p></div><span id="timeline-stage" class="status" hidden></span></header>

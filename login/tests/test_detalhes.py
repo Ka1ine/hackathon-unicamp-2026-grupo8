@@ -31,6 +31,17 @@ class DetalhesTest(unittest.TestCase):
         eventos = detalhes['timeline']['events']
         self.assertTrue(eventos)
         self.assertTrue(all(evento['source'] == 'file' for evento in eventos))
+        self.assertEqual(detalhes['start_date'], '2024-02-05')
+        self.assertEqual(detalhes['pending_action'], 'Protocolar Petição/Manifestação')
+        self.assertEqual(detalhes['policy']['next_recommended_action'], 'Defesa')
+        perfil = {item['label']: item['value'] for item in detalhes['author_profile']}
+        self.assertEqual(perfil['Nome'], 'MARIA DAS GRAÇAS SILVA PEREIRA')
+        self.assertEqual(perfil['Gênero'], 'Feminino')
+        self.assertEqual(perfil['Idade'], 'Pessoa idosa')
+        self.assertEqual(perfil['Localização'], 'São Luís/MA')
+        self.assertEqual(perfil['Renda'], 'Exclusivamente do benefício previdenciário')
+        self.assertEqual(perfil['Tipo de benefício'], 'Aposentadoria pelo RGPS (INSS)')
+        self.assertEqual(perfil['Instrução'], 'Baixa escolaridade')
 
     def test_sem_previa_usa_texto_e_numero_desconhecido_nao_abre_outro_caso(self):
         processos, _ = carregar_processos()

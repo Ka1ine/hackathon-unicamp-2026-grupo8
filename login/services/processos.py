@@ -1,6 +1,7 @@
 """Leitura dos autos fornecidos, sem valores fixos ou inferência jurídica."""
 from pathlib import Path
 from decimal import Decimal
+import json
 import re
 
 from pypdf import PdfReader
@@ -38,6 +39,26 @@ def _ler_pdf(caminho, versao):
     return extrair_processo(Path(caminho))
 
 
+@st.cache_data(show_spinner=False)
+def _ler_politica(caminho, versao):
+    """Lê risco e recomendação já calculados no JSON consolidado."""
+    conteudo = json.loads(Path(caminho).read_text(encoding="utf-8"))
+    politica = conteudo.get("policy_data")
+    if not isinstance(politica, dict):
+        raise ValueError("bloco policy_data ausente ou inválido")
+    return politica
+
+
+def normalizar_risco(valor):
+    riscos = {
+        "alto": "Alto",
+        "medio": "Médio",
+        "médio": "Médio",
+        "baixo": "Baixo",
+    }
+    return riscos.get(str(valor or "").strip().casefold(), "A avaliar")
+
+
 def carregar_processos(raiz=RAIZ):
     processos, erros = [], []
     pasta_dados = Path(raiz) / "data"
@@ -50,7 +71,30 @@ def carregar_processos(raiz=RAIZ):
         arquivo = arquivos[0]
         try:
             stat = arquivo.stat()
-            processos.append(_ler_pdf(str(arquivo), (stat.st_mtime_ns, stat.st_size)))
+            processo = dict(_ler_pdf(str(arquivo), (stat.st_mtime_ns, stat.st_size)))
         except Exception as exc:
             erros.append(f"Não foi possível ler {arquivo.name}: {exc}")
+            continue
+
+        arquivos_json = sorted(
+            (pasta_dados / "example_cases" / processo["id"]).glob("*.json")
+        )
+        if arquivos_json:
+            arquivo_json = arquivos_json[0]
+            try:
+                stat_json = arquivo_json.stat()
+                politica = _ler_politica(
+                    str(arquivo_json),
+                    (stat_json.st_mtime_ns, stat_json.st_size),
+                )
+                processo["risco"] = normalizar_risco(politica.get("risk_level"))
+                processo["recomendacao"] = (
+                    str(politica.get("next_recommended_action") or "").strip()
+                    or "A avaliar"
+                )
+            except Exception as exc:
+                erros.append(
+                    f"Não foi possível ler a política de {processo['id']}: {exc}."
+                )
+        processos.append(processo)
     return processos, erros

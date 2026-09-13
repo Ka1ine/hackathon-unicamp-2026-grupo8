@@ -29,13 +29,15 @@ class ProcessosFlowTest(unittest.TestCase):
         self.assertEqual(len(cards()), 0)
         self.assertTrue(app.info)
         app.text_input(key="busca_processos").set_value("")
-        app.selectbox(key="filtro_risco").select("A avaliar")
-        app.selectbox(key="filtro_recomendacao").select("A avaliar").run()
+        app.selectbox(key="filtro_risco").select("Todos")
+        app.selectbox(key="filtro_recomendacao").select("Todas").run()
         self.assertEqual(len(cards()), 2)
-        app.selectbox(key="filtro_recomendacao").select("Manter defesa").run()
-        self.assertEqual(len(cards()), 0)
+        app.selectbox(key="filtro_recomendacao").select("Defesa").run()
+        self.assertEqual(len(cards()), 1)
+        self.assertIn("Baixo", cards()[0])
+        self.assertIn("Defesa", cards()[0])
         self.assertFalse(app.exception)
-        app.button[0].click().run()
+        next(button for button in app.button if button.label == "Sair da conta").click().run()
         self.assertFalse(app.session_state.get("authenticated", False) if hasattr(app.session_state, "get") else "authenticated" in app.session_state)
 
     def test_pdf_values_and_missing_folder(self):
@@ -46,6 +48,11 @@ class ProcessosFlowTest(unittest.TestCase):
         self.assertEqual([p["valor"] for p in processos], [20000, 25000])
         self.assertEqual(processos[1]["id"], "0654321-09.2024.8.04.0001")
         self.assertEqual(processos[1]["nome"], "JOSÉ RAIMUNDO OLIVEIRA COSTA")
+        self.assertEqual([p["risco"] for p in processos], ["Baixo", "Alto"])
+        self.assertEqual(
+            [p["recomendacao"] for p in processos],
+            ["Defesa", "Acordo Mandatório"],
+        )
         with TemporaryDirectory() as directory:
             processos, erros = carregar_processos(directory)
             self.assertEqual(processos, [])

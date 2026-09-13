@@ -12,16 +12,50 @@
   $('chat-number').textContent = process.id;
   $('doc-count').textContent = process.documents.length;
   const timeline = process.timeline || {events: []};
+  const policy = process.policy || null;
   const timelineEvents = [...(timeline.events || [])].sort((left,right) => {
     const leftDate = typeof left.date === 'string' ? left.date : '';
     const rightDate = typeof right.date === 'string' ? right.date : '';
     return rightDate.localeCompare(leftDate);
   });
   $('timeline-count').textContent = timelineEvents.length;
-  for (const [label, value] of [['Instituição',process.bank],['Vara / tribunal',process.court],['Valor da causa',money(process.amount)],['Valor do empréstimo',process.loan],['Valor da parcela',process.installment]]) {
+  const processStartDate = process.start_date ? formatTimelineDate(process.start_date) : 'Não informada';
+  for (const [label, value] of [['Instituição',process.bank],['Vara / tribunal',process.court],['Valor da causa',money(process.amount)],['Data de início do processo',processStartDate],['Ação pendente',process.pending_action || 'Nenhuma ação pendente']]) {
     const group = document.createElement('div'), dt = document.createElement('dt'), dd = document.createElement('dd');
     dt.textContent = label; dd.textContent = value; group.append(dt,dd); $('metadata').append(group);
   }
+  function renderAnalysis() {
+    const profile = process.author_profile || [];
+    for (const item of profile) {
+      const group=document.createElement('div'), dt=document.createElement('dt'), dd=document.createElement('dd');
+      dt.textContent=item.label;dd.textContent=item.value;group.append(dt,dd);$('author-profile').append(group);
+    }
+    if (!policy) {
+      $('strategy-card').className='analysis-empty';
+      $('strategy-card').replaceChildren(document.createTextNode('A análise estratégica ainda não está disponível para este processo.'));
+      $('strategy-metrics').hidden=true;
+      $('strategy-explanation').textContent='O JSON do processo não contém o bloco de política de acordos.';
+      return;
+    }
+    const recommendation=String(policy.next_recommended_action || 'Análise pendente');
+    const agreement=/acordo/i.test(recommendation);
+    $('strategy-action').textContent=agreement?'Buscar um acordo':'Defender a tese';
+    $('strategy-kind').textContent=recommendation;
+    const risk=String(policy.risk_level || 'não informado');
+    $('strategy-risk').textContent=`Risco ${risk}`;
+    $('strategy-risk').classList.add(risk.toLocaleLowerCase('pt-BR')==='alto'?'high':risk.toLocaleLowerCase('pt-BR')==='baixo'?'low':'medium');
+    const values=[
+      ['Proposta inicial',agreement?money(policy.proposed_value_initial || 0):'Não aplicável'],
+      ['Teto para acordo',agreement?money(policy.proposed_value_maximum || 0):'Não aplicável'],
+      ['Custo estimado da defesa',money(policy.estimated_operacional_cost || 0)],
+    ];
+    for(const [label,value] of values){
+      const group=document.createElement('dl');group.className='strategy-metric';
+      const dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=label;dd.textContent=value;group.append(dt,dd);$('strategy-metrics').append(group);
+    }
+    $('strategy-explanation').textContent=policy.decision_explanation || 'O JSON não contém uma justificativa textual para esta recomendação.';
+  }
+  renderAnalysis();
   function setTab(tab, focus=false) {
     document.querySelectorAll('[role=tab]').forEach(button => {
       const selected = button.dataset.tab === tab;
