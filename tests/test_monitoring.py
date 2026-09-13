@@ -3,8 +3,8 @@ from pathlib import Path
 import pytest
 from dotenv import load_dotenv
 
-from src.monitoring.service import MonitoringService
-from src.monitoring.subsidio_service import SubsidioService
+from src.backend.monitoring.service import MonitoringService
+from src.backend.monitoring.subsidio_service import SubsidioService
 
 # Ensure environment variables (like OPENAI_API_KEY) are loaded for the tests
 load_dotenv()

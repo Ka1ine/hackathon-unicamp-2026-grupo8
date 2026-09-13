@@ -1,10 +1,10 @@
 import json
 from pathlib import Path
 
-from src.monitoring.extractor import CaseProgressionExtractor
-from src.monitoring.schemas import CaseProgressionResponse, TimelineEvent
-from src.monitoring.scraper import PublicCaseScraper
-from src.utils.pdf_utils import extract_text_from_file
+from src.backend.monitoring.extractor import CaseProgressionExtractor
+from src.backend.monitoring.schemas import CaseProgressionResponse, TimelineEvent
+from src.backend.monitoring.scraper import PublicCaseScraper
+from src.backend.utils.pdf_utils import extract_text_from_file
 
 
 class MonitoringService:

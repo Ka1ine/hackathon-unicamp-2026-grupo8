@@ -1,9 +1,9 @@
 import json
 import pandas as pd
 from pathlib import Path
-from src.policy.case_extractor import parse_case_folder
-from src.policy.policy_schemas import PolicyDecision
-from src.policy.run_policy import SettlementEngine, load_and_preprocess_training_data
+from src.backend.policy.case_extractor import parse_case_folder
+from src.backend.policy.policy_schemas import PolicyDecision
+from src.backend.policy.run_policy import SettlementEngine, load_and_preprocess_training_data
 
 
 class PolicyService:

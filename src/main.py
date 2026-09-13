@@ -2,7 +2,7 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
-from src.api.routes import router as monitoring_router
+from src.backend.api.routes import router as monitoring_router
 
 # Initialize the main FastAPI application
 app = FastAPI(title="Enter AI Legal Engine - Case Progression API")
@@ -28,4 +28,4 @@ def root():
 
 if __name__ == "__main__":
     # Launch the ASGI server
-    uvicorn.run("src.main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("src.backend.main:app", host="0.0.0.0", port=8000, reload=True)

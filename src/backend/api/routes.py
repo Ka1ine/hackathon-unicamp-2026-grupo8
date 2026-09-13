@@ -1,10 +1,10 @@
 from fastapi import APIRouter, HTTPException, Query
-from src.monitoring.master_schemas import CaseMasterOverview
-from src.monitoring.orchestrator import CaseOrchestrator
-from src.monitoring.schemas import CaseProgressionResponse
-from src.monitoring.service import MonitoringService
-from src.monitoring.subsidio_schemas import CompleteSubsidioAnalysis
-from src.monitoring.subsidio_service import SubsidioService
+from src.backend.monitoring.master_schemas import CaseMasterOverview
+from src.backend.monitoring.orchestrator import CaseOrchestrator
+from src.backend.monitoring.schemas import CaseProgressionResponse
+from src.backend.monitoring.service import MonitoringService
+from src.backend.monitoring.subsidio_schemas import CompleteSubsidioAnalysis
+from src.backend.monitoring.subsidio_service import SubsidioService
 
 # -----------------------------------------------------------------------------
 # Module Variables

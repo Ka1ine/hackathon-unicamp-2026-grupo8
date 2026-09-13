@@ -2,7 +2,7 @@ import os
 
 from dotenv import load_dotenv
 from openai import OpenAI
-from src.monitoring.schemas import CaseProgressionResponse
+from src.backend.monitoring.schemas import CaseProgressionResponse
 
 # Load environment variables
 load_dotenv()

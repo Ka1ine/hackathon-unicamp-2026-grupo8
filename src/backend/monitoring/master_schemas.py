@@ -1,8 +1,8 @@
 from enum import Enum
 from pydantic import BaseModel, Field
-from src.monitoring.schemas import CaseProgressionResponse
-from src.monitoring.subsidio_schemas import CompleteSubsidioAnalysis
-from src.policy.policy_schemas import PolicyDecision
+from src.backend.monitoring.schemas import CaseProgressionResponse
+from src.backend.monitoring.subsidio_schemas import CompleteSubsidioAnalysis
+from src.backend.policy.policy_schemas import PolicyDecision
 from typing import Optional
 
 class ProcessingStatus(str, Enum):

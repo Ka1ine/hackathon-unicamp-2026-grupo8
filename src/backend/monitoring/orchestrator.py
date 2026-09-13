@@ -2,10 +2,10 @@ import json
 import traceback
 
 from pathlib import Path
-from src.monitoring.master_schemas import CaseMasterOverview, ProcessingStatus
-from src.monitoring.service import MonitoringService
-from src.monitoring.subsidio_service import SubsidioService
-from src.policy.policy_service import PolicyService
+from src.backend.monitoring.master_schemas import CaseMasterOverview, ProcessingStatus
+from src.backend.monitoring.service import MonitoringService
+from src.backend.monitoring.subsidio_service import SubsidioService
+from src.backend.policy.policy_service import PolicyService
 
 class CaseOrchestrator:
     """Coordinates the retrieval and merging of case timelines and supporting documents."""

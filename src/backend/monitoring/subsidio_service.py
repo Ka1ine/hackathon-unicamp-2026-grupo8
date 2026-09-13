@@ -4,8 +4,8 @@ import re
 from datetime import datetime
 from pathlib import Path
 
-from src.monitoring.subsidio_extractor import SubsidioExtractor
-from src.monitoring.subsidio_schemas import (
+from src.backend.monitoring.subsidio_extractor import SubsidioExtractor
+from src.backend.monitoring.subsidio_schemas import (
     CompleteSubsidioAnalysis,
     ComprovanteCreditoDocument,
     ContratoDocument,
@@ -14,14 +14,14 @@ from src.monitoring.subsidio_schemas import (
     ExtratoDocument,
     LaudoReferenciadoDocument
 )
-from src.utils.pdf_utils import extract_text_from_file
+from src.backend.utils.pdf_utils import extract_text_from_file
 
 
 class SubsidioService:
     """Service responsible for loading, parsing, and caching supporting legal documents."""
 
     # Updated to match the actual folder name in the file tree
-    def __init__(self, base_data_dir: Path = Path("data/processos_exemplo"), cache_dir: Path = Path("data/cache")):
+    def __init__(self, base_data_dir: Path = Path("data/example_cases"), cache_dir: Path = Path("data/cache")):
         self.base_data_dir = base_data_dir
         self.cache_dir = cache_dir
         self.cache_dir.mkdir(exist_ok=True, parents=True)

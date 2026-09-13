@@ -1,7 +1,7 @@
 import os
 
 from openai import OpenAI
-from src.monitoring.subsidio_schemas import (
+from src.backend.monitoring.subsidio_schemas import (
     ComprovanteCreditoAnalysis,
     ContratoAnalysis,
     DemonstrativoDividaAnalysis,
