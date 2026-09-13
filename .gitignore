@@ -4,9 +4,7 @@
 *.env.*.local
 
 # Dados sensíveis — não versionar
-data/*.csv
-data/subsidios/
-data/processos_exemplo/
+data/
 
 # Dependências de pacotes
 node_modules/

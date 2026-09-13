@@ -2,6 +2,22 @@
 
 **17 e 18 de Abril de 2026**
 
+## Aplicação desenvolvida
+
+Esta solução transforma os documentos de processos em uma área de trabalho
+para advogados. Ela reúne a leitura dos autos, a política preditiva de acordos,
+o valor esperado de negociação, a linha do tempo extraída dos documentos,
+histórico da carteira, transparência do modelo e um assistente com contexto
+restrito ao caso aberto.
+
+O motor de política compara cada caso com processos similares da base de
+treinamento e sugere defesa, acordo estratégico ou acordo mandatório. A tela de
+detalhes mostra o risco, os valores sugeridos e uma fundamentação estatística
+formal. A preferência de agressividade ajusta os limiares e valores para a
+sessão do usuário e é registrada no JSON consolidado quando o caso é aberto.
+
+Para instalar, iniciar e utilizar a aplicação, consulte [SETUP.md](SETUP.md).
+
 > Aplique IA para resolver, em equipe, um problema real que toda grande empresa do Brasil enfrenta.
 
 ---
@@ -97,6 +113,8 @@ Cada equipe deve submeter **neste repositório**:
 
 ```
 ├── src/                  # código-fonte da solução
+│   ├── backend/          # API FastAPI e motor de análise
+│   └── frontend/         # interface Streamlit
 ├── data/                 # dados de exemplo (não inclua dados sensíveis)
 ├── docs/                 # apresentação final e documentação
 │   └── presentation.*    # slides ou documento para a apresentação

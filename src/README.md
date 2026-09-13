@@ -1,14 +1,10 @@
-# Coloque aqui o código-fonte da sua solução.
+# Código-fonte
 
-Não há restrição de linguagem ou tecnologia — use o que sua equipe domina melhor.
-
-## Sugestões de organização
-
-```
+```text
 src/
-├── policy/        # lógica da política de acordos (regras de decisão, sugestão de valor)
-├── interface/     # interface de acesso do advogado à recomendação
-└── utils/         # utilitários compartilhados
+├── backend/   # FastAPI, extração, monitoramento e política preditiva
+└── frontend/  # Streamlit, telas, serviços e assets da interface
 ```
 
-> Sinta-se livre para reorganizar conforme a arquitetura da sua solução.
+Os serviços são iniciados juntos com `python start.py` a partir da raiz. Veja
+[SETUP.md](../SETUP.md) para instalação, uso e testes.
